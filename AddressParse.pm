@@ -296,9 +296,9 @@ use Locale::SubCountry;
 use strict;
 
 use Exporter;
-use vars qw (@ISA @EXPORT_OK $VERSION);
+use vars qw (@ISA $VERSION);
 
-$VERSION   = '0.02';
+$VERSION   = '0.03';
 @ISA       = qw(Exporter);
 
 #------------------------------------------------------------------------------
@@ -548,23 +548,26 @@ q{
       
 # Suburbs can be up to three words such as Dee Why or St Johns Park.
 # Because Parse::RecDescent does greedy matching, we must end the regex
-# with a state. Otherwise the state field may be consumed as part of the 
-# suburb. The state field is extracted later in the _assemble method.
-# Note that this approach only allows state to appear as a single word.
-# State representations like "New South Wales" will not work.
+# with a subcountry. Otherwise the subcountry field may be consumed as part 
+# of the suburb. The subcountry field is extracted later in the _assemble 
+# method. Note that this approach only allows subcountry to appear as a 
+# single word. Subcountry representations like "New South Wales" will not work.
    
 
 # template used to consturct suburb_subcountry component at run time
 my $suburb_subcountry_template = q{ /([A-Z]{2,} ){1,3}__sub_country__ /i | };	
 
-# Subcountry component must be defined at run time, in new method
-
 my $australian_post_code = q{	post_code: /\d{4} ?/ };
+
+# Thanks to Steve Taylor for supplying format of Canadian post codes
+# Exmaple is K1B 4L7
+my $canadian_post_code = q{ post_code: /[A-Z]\d[A-Z] \d[A-Z]\d ?/ };
 
 my $US_post_code = q{ post_code:	 /\d{5} ?/ };
 
-# /[A-Z]{1,2}\d{1,2}[A-Z]? \d[A-Z]{2} ?/ # such as SG12A 9ET
-# Thanks to Mark Summerfiled for supplying UK post code formats
+# Thanks to Mark Summerfiled for supplying UK post code formats 
+# Exmaple is SG12A 9ET
+
 my $UK_post_code = 
 q{ 
 	post_code: outward_code inward_code
@@ -653,6 +656,11 @@ sub new
    {
 	   $grammar .= $australian_post_code;
    }
+   elsif ( $country_for_codes eq 'Canada' )
+   {
+	   $grammar .= $canadian_post_code;
+   }
+   
    elsif ( $country_for_codes eq 'UK' )
    {
 	   $grammar .= $UK_post_code;
@@ -667,7 +675,6 @@ sub new
 
    $address->{parse} = new Parse::RecDescent($grammar);
    
-   
    return ($address);
 }
 #------------------------------------------------------------------------------
@@ -677,8 +684,8 @@ sub parse
    my ($input_string) = @_;
 
    chomp($input_string);
-   # Remove any commas which can be used to chunk sections of addresses
-   $input_string =~ s/,//g;
+   # Replace commas (which can be used to chunk sections of addresses) with space
+   $input_string =~ s/,/ /g;
    $address = &_assemble($address,$input_string);
    &_validate($address);    
 

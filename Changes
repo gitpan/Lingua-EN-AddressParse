@@ -1,8 +1,11 @@
 
 Revision history for Perl CPAN module Lingua::EN::AddressParse
 
+0.03 14 May 2000: Added Canadian post codes, thanks to Steve Taylor
+                  Replaced commas with spaces, rather than removing them
+                  Removed @EXPORT and @EXPORT_OK as they were not needed
+
 0.02 30 Apr 2000: Used Locale::Subcountry for list of states, counties etc
                   Added more UK post code types, thanks to Mark Summerfield
-
 
 0.01 28 Dec 1999: First Release
