@@ -20,7 +20,9 @@ my $input;
 (
   country     => 'Australia',
   auto_clean  => 0,
-  force_case  => 1
+  force_case  => 1,
+  abbreviate_subcountry => 1
+  
 );
 
 my $address = new Lingua::EN::AddressParse(%args);
@@ -36,7 +38,7 @@ if
    $comps{street} eq 'Old Aminta' and
    $comps{street_type } eq 'Crescent' and
    $comps{suburb} eq 'Hasall Grove' and
-   $comps{subcountry} eq 'NEW SOUTH WALES' and
+   $comps{subcountry} eq 'NSW' and
    $comps{post_code} eq '2761' and
    $comps{country} eq 'AUSTRALIA'
 )

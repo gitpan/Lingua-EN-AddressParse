@@ -1,5 +1,8 @@
-
 Revision history for Perl CPAN module Lingua::EN::AddressParse
+
+1.03 24 May 2001
+    Allowed for forced abbreviations of sub country
+    Removed POD directives from README
 
 1.02 24 Apr 2001:
     Placed "my" declaration of loop variables inside foreach statements.
@@ -23,7 +26,8 @@ Revision history for Perl CPAN module Lingua::EN::AddressParse
 
 1.00 18 Mar 2001:
     Upgraded to work with changes to Locale::SubCountry, specifically,
-      US rather than USA being the valid code for initializing US addresses
+    US rather than USA being the valid code for initializing US addresses
+
     Moved grammar definition to AddressGrammar.pm module
 
 0.03 14 May 2000:

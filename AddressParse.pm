@@ -6,17 +6,19 @@ Lingua::EN::AddressParse - manipulate geographical addresses
 
    use Lingua::EN::AddressParse;
 
-   my %args =   (
+   my %args =
+   (
       country     => 'Australia',
       auto_clean  => 1,
-      force_case  => 1
+      force_case  => 1,
+      abbreviate_subcountry => 1
    );
 
    my $address = new Lingua::EN::AddressParse(%args);
    $error = $address->parse("14A MAIN RD. ST JOHNS WOOD NEW SOUTH WALES 2000");
 
    %my_address = $address->components;
-   $suburb = $my_address{suuburb};
+   $suburb = $my_address{suburb};
 
    $correct_casing = $address->case_all;
 
@@ -56,6 +58,7 @@ The following terms are used by AddressParse to define
 the components that can make up an address or post box.
 
    Post Box -  GP0 Box K123, LPO 2345, RMS 23 ...
+   
    Property Identifier
        Sub property description - Level, Unit, Apartment, Lot ...
        Property number          - 12/66A, 24-34, 2A, 23B/12C, 12/42-44
@@ -100,7 +103,8 @@ optional argument to the C<new> method.
    (
       country     => 'Australia',
       auto_clean  => 1,
-      force_case  => 1
+      force_case  => 1,
+      abbreviate_subcountry => 1
    );
 
    my $address = new Lingua::EN::AddressParse(%args);
@@ -119,21 +123,25 @@ module) and post code formats. Formats are currently supported for:
 All forms of upper/lower case are acceptable in the country's spelling. If a
 country name is supplied that the module doesn't recognise, it will die.
 
-=head2 force_case
+=head2 force_case (optional)
 
 This option will force the C<case_all> method to address case the entire input
 string, including any unmatched sections that failed parsing.   This option is
 useful when you know you data has invalid addresses, but you cannot filter out
 or reject them.
 
-=head2 auto_clean
+=head2 auto_clean  (optional)
 
 When this option is set to a positive value, any call to the C<parse> method
 that fails will attempt to 'clean' the address and then reparse it. See the
 C<clean> method for  details. This is useful for dirty data with embedded
 unprintable or non alphabetic characters.
 
+=head2 abbreviate_subcountry (optional)
 
+When this option is set to a positive value, the sub country is forced to it's
+abbreviated form, so "New South Wales" becomes "NSW". If the sub country is
+already abbreviated then it's value is not altered.
 
 =head2 parse
 
@@ -176,7 +184,7 @@ used for each component-
     post_code
     country
 
-If a key has no matching data for a given addres, it's values will be 
+If a key has no matching data for a given address, it's values will be 
 set to the empty string.
 
 =head2 components
@@ -252,12 +260,12 @@ Lingua::EN::NameParse, Parse::RecDescent, Locale::SubCountry
 
 Streets such as "The Esplanade" will return a street of "The" and a street type
 of "Esplanade". "Park" is not included in the list of street types, as streets
-like "Park Lane" would not be accepted. This is becuase the parser checks to see
+like "Park Lane" would not be accepted. This is because the parser checks to see
 that the street name is not also a street type.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2000 Kim Ryan. All rights reserved.
+Copyright (c) 2000-1 Kim Ryan. All rights reserved.
 This program is free software; you can redistribute it
 and/or modify it under the terms of the Perl Artistic License
 (see http://www.perl.com/perl/misc/Artistic.html).
@@ -282,7 +290,7 @@ use strict;
 use Exporter;
 use vars qw (@ISA $VERSION);
 
-$VERSION   = '1.02';
+$VERSION   = '1.03';
 @ISA       = qw(Exporter);
 
 
@@ -360,27 +368,27 @@ sub components
 # Apply correct capitalisation to each component of an address
 sub case_components
 {
-	my $address = shift;
+    my $address = shift;
 
-	my %orig_components = $address->components;
+    my %orig_components = $address->components;
 
-	my (%cased_components);
-	foreach my $curr_key ( keys %orig_components )
-	{
-		my $cased_value;
-		if ( $curr_key =~ /street|street_type|suburb|property_name/ )
-		{
-			# Surnames can be used for street's or suburbs so this method
-			# will give correct capitalisation for most cases
-			$cased_value = &Lingua::EN::NameParse::case_surname($orig_components{$curr_key});
-		}
-        # retian sub countries capitilsation, usually uppercase
-		else
-		{
-			$cased_value = uc($orig_components{$curr_key});
-		}
-		$cased_components{$curr_key} = $cased_value;
-	}
+    my (%cased_components);
+    foreach my $curr_key ( keys %orig_components )
+    {
+        my $cased_value;
+        if ( $curr_key =~ /street|street_type|suburb|property_name/ )
+        {
+            # Surnames can be used for street's or suburbs so this method
+            # will give correct capitalisation for most cases
+            $cased_value = &Lingua::EN::NameParse::case_surname($orig_components{$curr_key});
+        }
+        # retain sub countries capitilsation, usually uppercase
+        else
+        {
+            $cased_value = uc($orig_components{$curr_key});
+        }
+        $cased_components{$curr_key} = $cased_value;
+    }
     return(%cased_components);
 }
 #------------------------------------------------------------------------------
@@ -433,80 +441,100 @@ sub properties
 sub _assemble
 {
 
-	my $address = shift;
+    my $address = shift;
 
-	my $parsed_address = $address->{parse}->full_address($address->{input_string});
+    my $parsed_address = $address->{parse}->full_address($address->{input_string});
 
-	# Place components into a separate hash, so they can be easily returned to
-	# for the user to inspect and modify
-	$address->{components} = ();
+    # Place components into a separate hash, so they can be easily returned to
+    # for the user to inspect and modify
+    $address->{components} = ();
 
-	
-	$address->{components}{post_box} = '';
-	if ( $parsed_address->{post_box} )
-	{
-	  	$address->{components}{post_box} = &Lingua::EN::NameParse::_trim_space($parsed_address->{post_box});
-	}
+    
+    $address->{components}{post_box} = '';
+    if ( $parsed_address->{post_box} )
+    {
+        $address->{components}{post_box} = &Lingua::EN::NameParse::_trim_space($parsed_address->{post_box});
+    }
 
-	$address->{components}{property_name} = '';
-	if ( $parsed_address->{property_name} )
-	{
-	  	$address->{components}{property_name} = &Lingua::EN::NameParse::_trim_space($parsed_address->{property_name});
-	}
+    $address->{components}{property_name} = '';
+    if ( $parsed_address->{property_name} )
+    {
+        $address->{components}{property_name} = &Lingua::EN::NameParse::_trim_space($parsed_address->{property_name});
+    }
 
-	$address->{components}{property_identifier} = '';
-	if ( $parsed_address->{property_identifier} )
-	{
-	  	$address->{components}{property_identifier} = &Lingua::EN::NameParse::_trim_space($parsed_address->{property_identifier});
-	}
+    $address->{components}{property_identifier} = '';
+    if ( $parsed_address->{property_identifier} )
+    {
+        $address->{components}{property_identifier} = &Lingua::EN::NameParse::_trim_space($parsed_address->{property_identifier});
+    }
 
-	$address->{components}{street} = '';
-	if ( $parsed_address->{street} )
-	{
-		$address->{components}{street} = &Lingua::EN::NameParse::_trim_space($parsed_address->{street});
-	}
+    $address->{components}{street} = '';
+    if ( $parsed_address->{street} )
+    {
+        $address->{components}{street} = &Lingua::EN::NameParse::_trim_space($parsed_address->{street});
+    }
 
-	$address->{components}{street_type} = '';
-	if ( $parsed_address->{street_type} )
-	{
-	  $address->{components}{street_type} =  &Lingua::EN::NameParse::_trim_space($parsed_address->{street_type});
-	}
+    $address->{components}{street_type} = '';
+    if ( $parsed_address->{street_type} )
+    {
+    	$address->{components}{street_type} =  &Lingua::EN::NameParse::_trim_space($parsed_address->{street_type});
+    }
 
-	$address->{components}{suburb} = '';
-	if ( $parsed_address->{suburb} )
-	{
-	   $address->{components}{suburb} =  &Lingua::EN::NameParse::_trim_space($parsed_address->{suburb});
-	}
+    $address->{components}{suburb} = '';
+    if ( $parsed_address->{suburb} )
+    {
+    	$address->{components}{suburb} =  &Lingua::EN::NameParse::_trim_space($parsed_address->{suburb});
+    }
 
-	$address->{components}{subcountry} = '';
-	if ( $parsed_address->{subcountry} )
-	{
-	   $address->{components}{subcountry} =  &Lingua::EN::NameParse::_trim_space($parsed_address->{subcountry});
-	}
+    $address->{components}{subcountry} = '';
+    if ( $parsed_address->{subcountry} )
+    {
+       my $sub_country = &Lingua::EN::NameParse::_trim_space($parsed_address->{subcountry});
+       
+       # Force sub country to abbreviated form, South Australia becomes SA
+       if ($address->{abbreviate_subcountry})
+       {
+          my $country = new Locale::SubCountry($address->{country});
+          my $code = $country->code($sub_country);
+          if ( $code ne 'unknown' )
+          {
+             $address->{components}{subcountry} = $code;            
+          }
+          # sub country already abbreviated
+          else 
+          {
+             $address->{components}{subcountry} = $sub_country; 
+          }
+       }
+       else 
+       {
+           $address->{components}{subcountry} = $sub_country;   
+       }
+    }
 
-	$address->{components}{post_code} = '';
-	if ( $parsed_address->{post_code} )
-	{
-	  $address->{components}{post_code} = &Lingua::EN::NameParse::_trim_space($parsed_address->{post_code});
-	}
+    $address->{components}{post_code} = '';
+    if ( $parsed_address->{post_code} )
+    {
+      $address->{components}{post_code} = &Lingua::EN::NameParse::_trim_space($parsed_address->{post_code});
+    }
 
-	$address->{components}{country} = '';
-	if ( $parsed_address->{country} )
-	{
-	  $address->{components}{country} = &Lingua::EN::NameParse::_trim_space($parsed_address->{country});
-	}
+    $address->{components}{country} = '';
+    if ( $parsed_address->{country} )
+    {
+      $address->{components}{country} = &Lingua::EN::NameParse::_trim_space($parsed_address->{country});
+    }
 
-	$address->{properties} = ();
+    $address->{properties} = ();
 
-	$address->{properties}{non_matching} = '';
-	if ( $parsed_address->{non_matching} )
-	{
-		$address->{properties}{non_matching} = $parsed_address->{non_matching};
-	}
-	$address->{properties}{type} = $parsed_address->{type};
+    $address->{properties}{non_matching} = '';
+    if ( $parsed_address->{non_matching} )
+    {
+        $address->{properties}{non_matching} = $parsed_address->{non_matching};
+    }
+    $address->{properties}{type} = $parsed_address->{type};
 
 
-	return($address);
+    return($address);
 }
 #------------------------------------------------------------------------------
 
