@@ -10,13 +10,13 @@ use Lingua::EN::AddressParse;
 
 # We start with some black magic to print on failure.
 
-BEGIN { print "1..4\n"; }
+BEGIN { print "1..5\n"; }
 
 # Main tests
 
 my $input;
 
-  my %args =
+my %args =
 (
   country     => 'Australia',
   auto_clean  => 0,
@@ -50,6 +50,26 @@ else
     print "not ok 1\n";
 }
 
+$input = "12 Queen's Park Road Queens Park NSW 2022 ";
+$address->parse($input);
+my %comps = $address->case_components;
+if
+(
+   $comps{property_identifier} eq '12' and
+   $comps{street} eq "Queen\'s Park" and
+   $comps{street_type } eq 'Road' and
+   $comps{suburb} eq 'Queens Park' and
+   $comps{subcountry} eq 'NSW' and
+   $comps{post_code} eq '2022'
+)
+{
+   print "ok 2\n";
+}
+else
+{
+    print "not ok 2\n";
+}
+
 # Test rural address
 $input = '"OLD REGRET" WENTWORTH FALLS NSW 2780';
 $address->parse($input);
@@ -62,11 +82,11 @@ if
    $comps{post_code} eq '2780'
 )
 {
-   print "ok 2\n";
+   print "ok 3\n";
 }
 else
 {
-    print "not ok 2\n";
+    print "not ok 3\n";
 }
 
 # Test PO Box 
@@ -82,19 +102,17 @@ if
    $comps{post_code} eq '2146'
 )
 {
-   print "ok 3\n";
+   print "ok 4\n";
 }
 else
 {
-    print "not ok 3\n";
+    print "not ok 4\n";
 }
-
-
 
 # Test non matching
 $input = "12 SMITH ST ULTIMO NSW 2007 : ALL POSTAL DELIVERIES";
 $address->parse($input);
 my %props = $address->properties;
-print $props{non_matching} eq ": ALL POSTAL DELIVERIES" ? "ok 4\n" : "not ok 4\n";
+print $props{non_matching} eq ": ALL POSTAL DELIVERIES" ? "ok 5\n" : "not ok 5\n";
 
 

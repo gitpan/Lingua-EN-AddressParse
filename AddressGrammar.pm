@@ -118,9 +118,9 @@ full_address :
 my $property_identifier =
 q{
 
-   property_identifier : sub_property_desc(?) property_number
+   property_identifier : sub_property(?) property_number
    {
-   	
+    
        if ( $item[1][0] and $item[2] )
        {
           $return = "$item[1][0]$item[2]"
@@ -131,21 +131,19 @@ q{
        }
    }
 
-   sub_property_desc :
-
+   sub_property: 
       /Apartment /i |
       /Flat /i |
       /Unit /i |
-      /Lot /i |
       /Level /i |
       /Suite /i |
+      
+      /Lot /i |
       /RMB /i       # Roadside Mail Box
-
-
+      
    # such as 12/66A, 24-34, 2A, 23B/12C, 12/42-44
-   property_number : number (' '|'/')(?) number(?) ('-')(?) number(?)
+   property_number : number ('-'|'/')(?) number(?) ('-')(?) number(?)
    {
-   	
         if ( $item[1] and $item[2][0] and $item[3][0] and $item[4][0] and $item[5][0] )
         {
            $return = "$item[1]$item[2][0]$item[3][0]$item[4][0]$item[5][0]"
@@ -159,10 +157,11 @@ q{
           $return = $item[1]
         }
    }
-
-
-   # such as 23B
-   number : /\d{1,5}[A-Z]?/i
+   
+   number : ...!street_name_ordinal /\d{1,5}[A-Z]?/i # such as 23B
+   {
+      $return = $item[2];
+   }
 
 };
 
@@ -198,33 +197,96 @@ q{
 
 my $street =
 q{
-     street:  street_name(?)
-     {
-         $return = $item[1][0]
-     }
 
-    # Old South Head Road, South Parade, The Avenue
+   # Street name is optional for cases where street name IS in street_prefix,
+   # like South Parade or The Avenue 
 
-    # street_name : street_name_word
-    street_name : street_name_word(1..3)
+    street:  street_prefix(?) street_name(?)
     {
-        if ( $item[1][0] and $item[1][1] and $item[1][2] )
-        {
-           $return = "$item[1][0]$item[1][1]$item[1][2]"
-        }
-        elsif ( $item[1][0] and $item[1][1] )
+		if ( $item[1][0] and $item[2][0] )
+		{
+			$return = "$item[1][0]$item[2][0]"
+		}
+		elsif ( $item[2][0] )
+		{
+		   $return = $item[2][0]
+		}
+	    elsif ( $item[1][0] ) 
+	    {
+	        $return = $item[1][0]
+		}
+    }
+	street_prefix : 
+
+		/New /i       |
+		/Old /i       |
+		/The /i       |
+
+		/North /i     |   
+		/N(th)?\.? /i |   
+		/East /i      |   
+		/E\.? /i      |   
+		/South /i     |   
+		/S(th)?\.? /i |   
+		/West /i      |   
+		/W\.? /i      | 
+
+		/Upper /i     |   
+		/U\.? /i      |   
+		/Lower /i     |   
+		/L\.? /i 
+    
+
+	 
+	street_name : 
+    
+    	# Park is the only street_type that can also occur as a street name 
+        # so we have to handle these exceptions
+        
+        /Park /i ...street_type  # Park (Lane, Street) etc          
+        { $return = $item[1] }
+        |
+        /[A-Z'-]{2,} /i /Park /i ...street_type # Queen's Park Road etc
+        { $return = "$item[1]$item[2]" }
+        |
+    	street_name_words
+        | 
+        street_name_ordinal
+        |
+        street_name_letter
+        
+    # South Head (Road) etc
+    street_name_words : street_name_word(1..2)
+    {
+        if ( $item[1][0] and $item[1][1] )
         {
            $return = "$item[1][0]$item[1][1]"
         }
         else
         {
-          $return = $item[1][0]
+           $return = $item[1][0]
         }
     }
-
+    
+	# A single word. Use look ahead to prevent the second name of a two word
+    # street_type being consumed too early. For example, Street in Green Street 
     street_name_word: ...!street_type /[A-Z'-]{2,}\s+/i
-    { $return = $item[2] }
-
+	{ 
+    	$return = $item[2] 
+    }
+   
+    # eg 42nd Street
+    street_name_ordinal:
+		/11th\s+/i       |
+		/12th\s+/i       |
+		/13th\s+/i       |
+		/\d{0,2}1st\s+/i |
+		/\d{0,2}2nd\s+/i |
+		/\d{0,2}3rd\s+/i |
+		/\d{0,2}0th\s+/i |
+		/\d{0,2}[4-9]th\s+/i
+       
+    street_name_letter:  /[A-Z]\s+/  # eg B (Street)
 
     street_type:
 
@@ -258,6 +320,7 @@ q{
         /Lane /i         |
         /La?\.? /i       |
         /Parade /i       |
+        /Park /i         |
         /Pde?\.? /i      |
         /Place /i        |
         /Pl\.? /i        |
@@ -283,18 +346,18 @@ q
 {
     suburb : suburb_word(1..3)
     {
-	    if ( $item[1][0] and $item[1][1] and $item[1][2] )
-	    {
-	       $return = "$item[1][0]$item[1][1]$item[1][2]"
-	    }
-	    elsif ( $item[1][0] and $item[1][1] )
-	    {
-	       $return = "$item[1][0]$item[1][1]"
-	    }
-	    else
-	    {
-	      $return = $item[1][0]
-	    }
+        if ( $item[1][0] and $item[1][1] and $item[1][2] )
+        {
+           $return = "$item[1][0]$item[1][1]$item[1][2]"
+        }
+        elsif ( $item[1][0] and $item[1][1] )
+        {
+           $return = "$item[1][0]$item[1][1]"
+        }
+        else
+        {
+          $return = $item[1][0]
+        }
     }
 
     # suburb_word: /[A-Z]{2,}\s+/i
@@ -304,13 +367,14 @@ q
 
 
 
-my $australian_post_code = q{   post_code: /\d{4} ?/ };
+my $australian_post_code = q{ post_code: /\d{4} ?/ };
 
 # Thanks to Steve Taylor for supplying format of Canadian post codes
 # Example is K1B 4L7
 my $canadian_post_code = q{ post_code: /[A-Z]\d[A-Z] \d[A-Z]\d ?/ };
 
-my $US_post_code = q{ post_code:     /\d{5} ?/ };
+# Thanks to Mike Edwards for supplying US zip code formats
+my $US_post_code =       q{ post_code: /\d{5}(-?\d{4})? ?/};
 
 # Thanks to Mark Summerfiled for supplying UK post code formats
 # Example is SG12A 9ET
@@ -332,36 +396,36 @@ q{
 
 
 my $Australia =
-q{	
-	country:
-    	/Australia ?/i |
+q{  
+    country:
+        /Australia ?/i |
         /Aust\.? ?/i
 };
 
 my $Canada =
 q{
-	country:
-    	/Canada ?/i
+    country:
+        /Canada ?/i
 };
 
 my $US =
 q{
-	country:
-    	/United States of America ?/i |
-	    /United States ?/i |
-	    /USA? ?/i
+    country:
+        /United States of America ?/i |
+        /United States ?/i |
+        /USA? ?/i
 };
 
 my $UK =
 q{
-	country:
-    	/Great Britain ?/i |
-	    /United Kingdom ?/i |
-	    /UK ?/i |
-	    /GB ?/i
+    country:
+        /Great Britain ?/i |
+        /United Kingdom ?/i |
+        /UK ?/i |
+        /GB ?/i
 };
 
-my $non_matching = 	q{ non_matching: /.*/ };
+my $non_matching =  q{ non_matching: /.*/ };
 
 #-------------------------------------------------------------------------------
 sub create
@@ -415,18 +479,18 @@ sub create
     elsif ( $address->{country} eq 'Canada' )
     {
        $grammar .= $canadian_post_code;
-	   $grammar .= Canada;
+       $grammar .= Canada;
     }
 
     elsif ( $address->{country} eq 'UK' )
     {
        $grammar .= $UK_post_code;
-	   $grammar .= $UK;
+       $grammar .= $UK;
     }
     elsif ( $address->{country} eq 'US' )
     {
        $grammar .= $US_post_code;
-	   $grammar .= $US;
+       $grammar .= $US;
     }
     else
     {

@@ -259,9 +259,7 @@ Lingua::EN::NameParse, Parse::RecDescent, Locale::SubCountry
 =head1 BUGS
 
 Streets such as "The Esplanade" will return a street of "The" and a street type
-of "Esplanade". "Park" is not included in the list of street types, as streets
-like "Park Lane" would not be accepted. This is because the parser checks to see
-that the street name is not also a street type.
+of "Esplanade".
 
 =head1 COPYRIGHT
 
@@ -290,7 +288,7 @@ use strict;
 use Exporter;
 use vars qw (@ISA $VERSION);
 
-$VERSION   = '1.03';
+$VERSION   = '1.04';
 @ISA       = qw(Exporter);
 
 
@@ -555,8 +553,9 @@ sub _validate
    {
       $address->{error} = 1;
    }
-   # no vowel sound in street
-   elsif ( not &Lingua::EN::NameParse::_valid_name( $address->{components}{street}) )
+   # no vowel sound in street (of more than one letter length)
+   elsif ( length($address->{components}{street}) > 1 and 
+   	  not &Lingua::EN::NameParse::_valid_name( $address->{components}{street}) )
    {
       $address->{error} = 1;
    }
