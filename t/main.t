@@ -10,7 +10,7 @@ use Lingua::EN::AddressParse;
 
 # We start with some black magic to print on failure.
 
-BEGIN { print "1..5\n"; }
+BEGIN { print "1..8\n"; }
 
 # Main tests
 
@@ -114,5 +114,90 @@ $input = "12 SMITH ST ULTIMO NSW 2007 : ALL POSTAL DELIVERIES";
 $address->parse($input);
 my %props = $address->properties;
 print $props{non_matching} eq ": ALL POSTAL DELIVERIES" ? "ok 5\n" : "not ok 5\n";
+
+# Test other countries
+
+%args =
+(
+  country     => 'US',
+  abbreviated_subcountry_only => 1
+  
+);
+
+$address = new Lingua::EN::AddressParse(%args);
+
+$input = "12 AMINTA CRESCENT BEVERLEY HILLS CA 90210-1234";
+$address->parse($input);
+%comps = $address->case_components;
+if
+(
+   $comps{property_identifier} eq '12' and
+   $comps{street} eq 'Aminta' and
+   $comps{street_type } eq 'Crescent' and
+   $comps{suburb} eq 'Beverley Hills' and
+   $comps{subcountry} eq 'CA' and
+   $comps{post_code} eq '90210-1234'
+)
+{
+   print "ok 6\n";
+}
+else
+{
+    print "not ok 6\n";
+}
+
+%args =
+(
+  country     => 'Canada',
+);
+
+$address = new Lingua::EN::AddressParse(%args);
+
+$input = "12 AMINTA CRESCENT BEVERLEY HILLS BRITISH COLUMBIA K1B 4L7";
+$address->parse($input);
+%comps = $address->case_components;
+if
+(
+   $comps{property_identifier} eq '12' and
+   $comps{street} eq 'Aminta' and
+   $comps{street_type } eq 'Crescent' and
+   $comps{suburb} eq 'Beverley Hills' and
+   $comps{subcountry} eq 'BRITISH COLUMBIA' and
+   $comps{post_code} eq 'K1B 4L7'
+)
+{
+   print "ok 7\n";
+}
+else
+{
+    print "not ok 7\n";
+}
+
+%args =
+(
+  country     => 'United Kingdom',
+);
+
+$address = new Lingua::EN::AddressParse(%args);
+
+$input = "12 AMINTA CRESCENT NEWPORT IOW SW1A 9ET";
+$address->parse($input);
+%comps = $address->case_components;
+if
+(
+   $comps{property_identifier} eq '12' and
+   $comps{street} eq 'Aminta' and
+   $comps{street_type } eq 'Crescent' and
+   $comps{suburb} eq 'Newport' and
+   $comps{subcountry} eq 'IOW' and
+   $comps{post_code} eq 'SW1A 9ET'
+)
+{
+   print "ok 8\n";
+}
+else
+{
+    print "not ok 8\n";
+}
 
 

@@ -66,8 +66,7 @@ the components that can make up an address or post box.
 
    Property name - "Old Regret"
 
-   Street
-       Street name - O'Hare, New South Head, The Causeway
+   Street name - O'Hare, New South Head, The Causeway
 
    Street type - Road, Rd., St, Lane, Highway, Crescent, Circuit ...
 
@@ -115,12 +114,13 @@ optional argument to the C<new> method.
 
 The country argument must be specified. It determines the possible list of
 valid sub countries (states, counties etc, defined in the Locale::SubCountry
-module) and post code formats. Formats are currently supported for:
+module) and post code formats. Either the full name or abbreviation may be
+specified. The currently suppoted country names and codes are:
 
-   Australia
-   Canada
-   UK
-   US
+   AU or Australia
+   CA or Canada
+   GB or United Kingdom
+   US or United States
 
 All forms of upper/lower case are acceptable in the country's spelling. If a
 country name is supplied that the module doesn't recognise, it will die.
@@ -282,7 +282,7 @@ and/or modify it under the terms of the Perl Artistic License
 =head1 AUTHOR
 
 AddressParse was written by Kim Ryan <kimaryan@ozemail.com.au>.
-<http://members.ozemail.com.au/~kimaryan/data_distillers/>
+<http://www.data-distillers.com>
 
 =cut
 
@@ -300,7 +300,7 @@ use strict;
 use Exporter;
 use vars qw (@ISA $VERSION);
 
-$VERSION   = '1.10';
+$VERSION   = '1.11';
 @ISA       = qw(Exporter);
 
 

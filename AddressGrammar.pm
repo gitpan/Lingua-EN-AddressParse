@@ -26,7 +26,7 @@ and/or modify it under the terms of the Perl Artistic License
 =head1 AUTHOR
 
 AddressGrammar was written by Kim Ryan <kimaryan@ozemail.com.au>
-<http://members.ozemail.com.au/~kimaryan/data_distillers/>
+<http://www.data-distillers.com>
 
 
 =cut
@@ -511,7 +511,7 @@ my $canadian_post_code = q{ post_code: /[A-Z]\d[A-Z] \d[A-Z]\d ?/ };
 my $US_post_code =       q{ post_code: /\d{5}(-?\d{4})? ?/};
 
 # Thanks to Mark Summerfiled for supplying UK post code formats
-# Example is SG12A 9ET
+# Example is SW1A 9ET
 
 my $UK_post_code =
 q{
@@ -573,19 +573,22 @@ sub create
     $grammar .= $street;
     $grammar .= $suburb;
 
-    my $subcountry = new Locale::SubCountry($address->{country});
+    # User can specify country either as full name or 2 letter
+	# abbreviation, such as Australia or AU
+   
+    my $country = new Locale::SubCountry($address->{country});
 
     my $subcountry_grammar = "    subcountry :\n";
 
     # Loop over all sub countries to create a grammar for all subcountry
-    # combinations for this country. The grammar for Australia would look like
+    # combinations for this country. The grammar for Australia will look like
     #
     # subcountry :  /NSW /i |
     #               /QLD /i |
     #               /NEW SOUTH WALES /i
     #               /QUEENSLAND /i |
 
-    my @all_codes = $subcountry->all_codes;
+    my @all_codes = $country->all_codes;
     my $last_code = pop(@all_codes);
 
     foreach my $code (@all_codes)
@@ -600,7 +603,7 @@ sub create
 	{
 	    $subcountry_grammar .= "| \n";
 
-	    my @all_full_names = $subcountry->all_full_names;
+	    my @all_full_names = $country->all_full_names;
 	    my $last_full_name = pop(@all_full_names);
 
 
@@ -614,31 +617,31 @@ sub create
 
     $grammar .= $subcountry_grammar;
 
-    if ( $address->{country} eq 'Australia' )
+    if ( $country->country_code eq 'AU' )
     {
        $grammar .= $australian_post_code;
        $grammar .= $Australia;
 
     }
-    elsif ( $address->{country} eq 'Canada' )
+    elsif ( $country->country_code eq 'CA' )
     {
        $grammar .= $canadian_post_code;
-       $grammar .= Canada;
+       $grammar .= $Canada;
     }
 
-    elsif ( $address->{country} eq 'UK' )
+    elsif ( $country->country_code eq 'GB' )
     {
        $grammar .= $UK_post_code;
        $grammar .= $UK;
     }
-    elsif ( $address->{country} eq 'US' )
+    elsif ( $country->country_code eq 'US' )
     {
        $grammar .= $US_post_code;
        $grammar .= $US;
     }
     else
     {
-        die "Invalid country: $address->{country}";
+        die "Invalid country code or name: $address->{country}";
     }
 
     $grammar .= $non_matching;
