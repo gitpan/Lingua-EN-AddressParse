@@ -32,7 +32,8 @@ WriteMakefile
    'NAME'            => 'Lingua::EN::AddressParse',
    'PM'              =>
    {
-      'AddressParse.pm' => '$(INST_LIBDIR)/AddressParse.pm',
+      'AddressParse.pm'   => '$(INST_LIBDIR)/AddressParse.pm',
+      'AddressGrammar.pm' => '$(INST_LIBDIR)/AddressGrammar.pm',
    },
    'PREREQ_PM'       =>         
    {                            

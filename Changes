@@ -1,6 +1,12 @@
 
 Revision history for Perl CPAN module Lingua::EN::AddressParse
 
+1.00 18 Mar 2001: Upgraded to work with changes to Local::SubCountry,
+                    specifically, US rather than USA being the valid
+                    code for initializing US addresses
+                  Moved grammar defintion to AddressGrammar.pm module
+                    
+
 0.03 14 May 2000: Added Canadian post codes, thanks to Steve Taylor
                   Replaced commas with spaces, rather than removing them
                   Removed @EXPORT and @EXPORT_OK as they were not needed

@@ -1,11 +1,16 @@
 #! /usr/local/bin/perl
+
 # Demo script for Lingua::EN::AddressParse.pm
+
+# $::RD_HINT  = 1;
+# $::RD_TRACE = 1;
+
 
 use Lingua::EN::AddressParse;
 
 my %args = 
 (
-	country     => 'Australia',
+   country     => 'Australia',
    auto_clean  => 0,
    force_case  => 1
 );
@@ -18,20 +23,20 @@ open(ERROR_FH,">error.txt") or die;
 
 while ( <DATA> )
 {
-   chomp($_);
-   $address_in = $_; 
+    chomp($_);
+    $address_in = $_; 
    
 	$total++;
 	$error = $address->parse($address_in);
-   $error and $errors++; 
+    $error and $errors++; 
 
 	%comps = $address->case_components;
 	%props = $address->properties;
    
-   if ( $error )
-   {
+	if ( $error )
+	{
 		print(ERROR_FH $props{non_matching},"\n");
-   }
+	}
    
 	elsif ( $props{type} eq "suburban" )
 	{
@@ -59,9 +64,10 @@ printf("BATCH DATA QUALITY: %5.2f percent\n",( 1- ($errors / $total)) *100 );
 
 #------------------------------------------------------------------------------
 __DATA__
+147 CHARLESTOWN ROAD KOTARA HEIGHTS NEW SOUTH WALES 2289 AUSTRALIA
+22A VICTORIA STREET CARDIFF VIC 3285 AUSTRALIA
 "OLD REGRET" WENTWORTH FALLS NSW 2782
 14A WANDARRA CRESCENT ST JOHNS WOOD SW 200
-147 CHARLESTOWN ROAD KOTARA HEIGHTS NSW 2289 AUSTRALIA
 Level 2/12 LEIGH CIRCUIT WERRIBEE HILLS VICTORIA 3030
 2/3-5 AUBREY ST VERMONT VIC 3133
 60 Watkins Road Baulkham Hills NSW 2153
