@@ -52,7 +52,7 @@ else
 
 $input = "12 Queen's Park Road Queens Park NSW 2022 ";
 $address->parse($input);
-my %comps = $address->case_components;
+%comps = $address->case_components;
 if
 (
    $comps{property_identifier} eq '12' and

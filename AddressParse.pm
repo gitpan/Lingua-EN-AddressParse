@@ -270,7 +270,8 @@ and/or modify it under the terms of the Perl Artistic License
 
 =head1 AUTHOR
 
-AddressParse was written by Kim Ryan <kimaryan@ozemail.com.au> in 2000.
+AddressParse was written by Kim Ryan <kimaryan@ozemail.com.au>.
+<http://members.ozemail.com.au/~kimaryan/data_distillers/>
 
 =cut
 
@@ -288,7 +289,7 @@ use strict;
 use Exporter;
 use vars qw (@ISA $VERSION);
 
-$VERSION   = '1.04';
+$VERSION   = '1.05';
 @ISA       = qw(Exporter);
 
 

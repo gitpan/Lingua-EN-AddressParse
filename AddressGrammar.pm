@@ -25,7 +25,8 @@ and/or modify it under the terms of the Perl Artistic License
 
 =head1 AUTHOR
 
-AddressGrammar was written by Kim Ryan <kimaryan@ozemail.com.au> in 1999.
+AddressGrammar was written by Kim Ryan <kimaryan@ozemail.com.au>
+<http://members.ozemail.com.au/~kimaryan/data_distillers/>
 
 
 =cut
@@ -297,7 +298,8 @@ q{
         /Avenue /i       |
         /Ave?\.? /i      |
         /Boulevarde? /i  |
-        /Blv?d\.? /i     |
+        /Blvd\.? /i      |
+        /Bvd\.? /i       |
         /Brae /i         |
         /Circle /i       |
         /Circuit /i      |
@@ -315,6 +317,10 @@ q{
         /Expy?\.? /i     |
         /Freeway /i      |
         /Fw?y\.? /i      |
+        /Glen /i         |
+        /Gln\.? /i       |
+        /Grove /i        |
+        /Gr\.? /i        |
         /Highway /i      |
         /Hwa?y\.? /i     |
         /Lane /i         |
@@ -329,6 +335,9 @@ q{
         /Roadway /i      |
         /Road /i         |
         /Rd\.? /i        |
+        /Row /i          |
+        /Square /i       |
+        /Sq\.? /i        |
         /Street /i       |
         /St\.? /i        |
         /Terrace /i      |

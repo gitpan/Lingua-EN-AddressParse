@@ -1,15 +1,19 @@
 Revision history for Perl CPAN module Lingua::EN::AddressParse
 
+1.05 24 Sep 2001
+    Added more street types
+    Removed duplicated declaration for main.t
+
 1.04 31 Aug 2001
     Allowed for streets with numbers or single letters (42nd, A, B...)
-	Allowed for ZIP codes of type 12345-6789
-	Thanks to Mike Edwards for noting these limitations
+    Allowed for ZIP codes of type 12345-6789
+    Thanks to Mike Edwards for noting these limitations
 
-	Added 'Park'to street types, while accounting for cases like
-	'Park Lane, 'Moore Park Road' etc.
+    Added 'Park'to street types, while accounting for cases like
+    'Park Lane, 'Moore Park Road' etc.
 
-	Added extra test case
-	Added street perixes (like Old, East) back in to simplify grammar
+    Added extra test case
+    Added street prefixes (like Old, East) back in to simplify grammar
 
 1.03 24 May 2001
     Allowed for forced abbreviations of sub country
