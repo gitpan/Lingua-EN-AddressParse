@@ -18,7 +18,7 @@ for more details.
 
 =head1 COPYRIGHT
 
-Copyright (c) 1999-2001 Kim Ryan. All rights reserved.
+Copyright (c) 1999-2002 Kim Ryan. All rights reserved.
 This program is free software; you can redistribute it
 and/or modify it under the terms of the Perl Artistic License
 (see http://www.perl.com/perl/misc/Artistic.html).
@@ -48,15 +48,31 @@ full_address :
    # always consist of one element, when they exist.
 
 
+     property_identifier(?) street_noun suburb subcountry post_code country(?) non_matching(?)
+     {
+        # block of code to define actions upon successful completion of a
+        # 'production' or rule
+  
+        $return =
+        {
+           # Parse::RecDescent lets you return a single scalar, which we use as
+           # an anonymous hash reference
+           property_identifier => $item[1][0],
+           street              => $item[2],
+           suburb              => $item[3],
+           subcountry          => $item[4],
+           post_code           => $item[5],
+           country             => $item[6][0],
+           non_matching        => $item[7][0],
+           type                => 'suburban'
+        }
+     }
+     |
+
    property_identifier(?) street street_type suburb subcountry post_code country(?) non_matching(?)
    {
-      # block of code to define actions upon successful completion of a
-      # 'production' or rule
-
       $return =
       {
-         # Parse::RecDescent lets you return a single scalar, which we use as
-         # an anonymous hash reference
          property_identifier => $item[1][0],
          street              => $item[2],
          street_type         => $item[3],
@@ -134,30 +150,44 @@ q{
 
    sub_property: 
       /Apartment /i |
+	  /Apt\.? /i |
       /Flat /i |
       /Unit /i |
       /Level /i |
-      /Suite /i |
-      
       /Lot /i |
-      /RMB /i       # Roadside Mail Box
+      /No\.? ?/i |
+      /Rear (Of )?/i |
+      /RMB /i |
+      /Shop /i |
+      /Suite /i |
+      /Villa /i
+      
       
    # such as 12/66A, 24-34, 2A, 23B/12C, 12/42-44
-   property_number : number ('-'|'/')(?) number(?) ('-')(?) number(?)
-   {
-        if ( $item[1] and $item[2][0] and $item[3][0] and $item[4][0] and $item[5][0] )
-        {
-           $return = "$item[1]$item[2][0]$item[3][0]$item[4][0]$item[5][0]"
-        }
-        elsif ( $item[1] and $item[2][0] and $item[3][0] )
-        {
-           $return = "$item[1]$item[2][0]$item[3][0]"
-        }
-        else
-        {
-          $return = $item[1]
-        }
-   }
+   property_number : 
+		number '/' number '-' number # 12/42-44
+		{ 
+			$return = "$item[1]$item[2]$item[3]$item[4]$item[5]"
+		} 
+		|	 
+		number number '-' number # 12 42-44
+		{ 
+			$return = "$item[1] $item[2]$item[3]$item[4]"
+		} 
+		|	 
+		number ('-'|'/') number # 24/34A, 24-34
+		{ 
+			$return = "$item[1]$item[2]$item[3]"
+		}
+		| 
+		number number # 24 34
+		{ 
+		    # note that space character will be consumed and must be restored
+			$return = "$item[1] $item[2]"
+		} 
+		|	 
+		number
+
    
    number : ...!street_name_ordinal /\d{1,5}[A-Z]?/i # such as 23B
    {
@@ -168,8 +198,9 @@ q{
 
 my $property_name =
 q{
-   # Property or station names like "Old Regret" or "Never Fail"
-   property_name : /\"[A-Z]{3,}( [A-Z]{3,})?\" /i
+   # Property or station names like "Old Regret" or 'Never Fail'
+   property_name : /\"[A-Z'-]{2,}( [A-Z'-]{2,})?\" /i |
+				   /\'[A-Z-]{2,}( [A-Z-]{2,})?\' /i
 };
 
 my $post_box =
@@ -184,14 +215,21 @@ q{
 
     /G\.?P\.?O\.? Box /i |
     /L\.?P\.?O\.? Box /i |
-    /P ?O Box /i |
-    /P\.?O\.? Box /i |
-    /RMS /i |
-    /RMB /i |      # Roadside Mail Box
-    /RSD /i
+    /P ?O Box /i         |
+    /P\.?O\.? Box /i     |
 
+    /Locked Bag /i  |
+    /Private Bag /i |
 
-    box_number : /[A-Z]?\d{1,5} /i
+    /CMB / | # Community Mail Bag
+    /CMA / | # Community Mail Agent
+    /CPA / | # Community Postal Agent
+    /RMS / | # Roadside Mail Service
+    /RMB / | # Roadside Mail Box
+    /RSD /	 # Roadside Side Delivery
+
+    box_number : /[A-Z]?\d{1,5}[A-Z]? /i
+
 
 };
 
@@ -199,10 +237,64 @@ q{
 my $street =
 q{
 
-   # Street name is optional for cases where street name IS in street_prefix,
-   # like South Parade or The Avenue 
 
-    street:  street_prefix(?) street_name(?)
+   # allow for case where street type IS the street name, as in The PARADE
+   street_noun: /The /i nouns { $return = "$item[1]$item[2]" }
+
+	  nouns:	
+         /Arcade /i       |
+         /Avenue /i       |
+         /Boulevarde? /i  |
+         /Broadway /i     |
+         /Cascades /i     |
+         /Carriageway /i  |
+         /Causeway /i     |
+         /Centre /i       |
+         /Chase /i        |
+         /Circle /i       |
+         /Circuit /i      |
+         /Close /i        |
+         /Corso /i        |
+         /Crest /i        |
+         /Crescent /i     |
+         /Deviation /i    |
+         /Driftway /i     |
+         /Entrance /i     |
+         /Esplanade /i    |
+         /Fairway /i      |
+         /Glade /i        |
+         /Glen /i         |
+         /Grange /i       |
+         /Greenway /i     |
+         /Grove /i        |
+         /Haven /i        |
+         /Kingsway /i     |
+         /Knoll /i        |
+         /Mall /i         |
+         /Parade /i       |
+         /Parkway /i      |
+         /Plaza /i        |
+         /Promenade /i    |
+         /Ridge /i        |
+         /Row /i          |
+         /Serpentine /i   |
+         /Square /i       |
+         /Strand /i       |
+         /Terrace /i      |
+         /Walk /i         |
+
+         /Five Ways /i    |
+         /Six Ways /i     |
+         /Seven Ways /i   |
+         /Eight Ways /i   |
+         /Nine Ways /i
+
+
+
+   # Street name is optional for cases where street name IS in street_prefix,
+   # like South Parade
+
+    street: street_prefix(?) street_name(?)
     {
 		if ( $item[1][0] and $item[2][0] )
 		{
@@ -212,43 +304,65 @@ q{
 		{
 		   $return = $item[2][0]
 		}
-	    elsif ( $item[1][0] ) 
+	    elsif ( $item[1][0] )
 	    {
 	        $return = $item[1][0]
 		}
     }
-	street_prefix : 
+
+	prefix :
 
 		/New /i       |
 		/Old /i       |
-		/The /i       |
+		/Mt\.? /i     |
+		/Mount /i     |
 
-		/North /i     |   
-		/N(th)?\.? /i |   
-		/East /i      |   
-		/E\.? /i      |   
-		/South /i     |   
-		/S(th)?\.? /i |   
-		/West /i      |   
-		/W\.? /i      | 
+		/North /i     |
+		/N(th)?\.? /i |
+		/East /i      |
+		/E\.? /i      |
+		/South /i     |
+		/S(th)?\.? /i |
+		/West /i      |
+		/W\.? /i      |
 
 		/Upper /i     |   
 		/U\.? /i      |   
 		/Lower /i     |   
-		/L\.? /i 
-    
+		/L\.? /i
 
-	 
-	street_name : 
+	street_prefix :	 
+	
+	    prefix   |  
+	    /Dame /i | 
+	    /Sir /i
+
     
-    	# Park is the only street_type that can also occur as a street name 
-        # so we have to handle these exceptions
+	street_name :
+    
+    	# Allow for street_type that can also occur as a street name
+        # so we have to handle these exceptions, eg Park Lane
         
-        /Park /i ...street_type  # Park (Lane, Street) etc          
-        { $return = $item[1] }
+        /(Brae|Close|Crescent|Esplanade|Glen|Grove|Lane|Park|Ridge|Terrace) /i ...street_type
+        { 
+        	$return = $item[1]
+        }
+
         |
-        /[A-Z'-]{2,} /i /Park /i ...street_type # Queen's Park Road etc
-        { $return = "$item[1]$item[2]" }
+
+		# Queen's Park Road, Grand Ridge Rd  etc
+        street_name_word /Park |Ridge /i ...street_type  
+        { 
+        	$return = "$item[1]$item[2]"
+        }
+
+        |
+		
+		# Glen Alpine Way, La Boheme Ave, St. Kilda Rd etc 
+        /(Glen|La|Lt\.?|Park|St\.?) /i street_name_word ...street_type
+        { 
+        	$return = "$item[1]$item[2]"
+        }
         |
     	street_name_words
         | 
@@ -291,92 +405,103 @@ q{
 
     street_type:
 
-        /Arcade /i       |
-        /Arc?\.? /i      |
-        /Alley /i        |
-        /Al\.? /i        |
-        /Avenue /i       |
-        /Ave?\.? /i      |
-        /Boulevarde? /i  |
-        /Blvd\.? /i      |
-        /Bvd\.? /i       |
-        /Brae /i         |
-        /Circle /i       |
-        /Circuit /i      |
-        /Close /i        |
-        /Cl\.? /i        |
-        /Court /i        |
-        /Ct\.? /i        |
-        /Crescent /i     |
-        /Cres\.? /i      |
-        /Cr\.? /i        |
-        /Drive /i        |
-        /Dr\.? /i        |
-        /Esplanade /i    |
-        /Expressway /i   |
-        /Expy?\.? /i     |
-        /Freeway /i      |
-        /Fw?y\.? /i      |
-        /Glen /i         |
-        /Gln\.? /i       |
-        /Grove /i        |
-        /Gr\.? /i        |
-        /Highway /i      |
-        /Hwa?y\.? /i     |
-        /Lane /i         |
-        /La?\.? /i       |
-        /Parade /i       |
-        /Park /i         |
-        /Pde?\.? /i      |
-        /Place /i        |
-        /Pl\.? /i        |
-        /Plaza /i        |
-        /Plz\.? /i       |
-        /Roadway /i      |
-        /Road /i         |
-        /Rd\.? /i        |
-        /Row /i          |
-        /Square /i       |
-        /Sq\.? /i        |
-        /Street /i       |
-        /St\.? /i        |
-        /Terrace /i      |
-        /Tce\.? /i       |
-        /Walk /i         |
-        /Way /i          |
-        /Wy\.? /i
+		 # Place most common types first to improve the speed of matching
+         /St\.? /i    | /Street /i   |
+         /Rd\.? /i    | /Road /i     |
+         /La\.? /i    | /Lane /i     |
+         /Ave?\.? /i  | /Avenue /i   |
+
+         /Al\.? /i    | /Alley /i        |
+         /Arc\.? /i   | /Arcade /i       |
+         /Bvd\.? /i   | /Boulevarde? /i  |
+         /Bnd\.? /i   | /Bend /i         |
+         /Bl\.? /i    | /Bowl /i         |
+         /Br\.? /i    | /Brae /i         |
+         /Cir\.? /i   | /Circle /i       |
+         /Cct\.? /i   | /Circuit /i      |
+         /Cl\.? /i    | /Close /i        |
+         /Ct\.? /i    | /Court /i        |
+         /Cres\.? /i  | /Cr\.? /i        | /Crescent /i |
+         /Dr\.? /i    | /Drive /i        |
+         /Esp\.? /i   | /Esplanade /i    |
+         /Exp\.? /i   | /Expressway /i   |
+         /Fw?y\.? /i  | /Freeway /i      |
+         /Gln\.? /i   | /Glen /i         |
+         /Gr\.? /i    | /Grove /i        |
+         /Hwa?y\.? /i | /Highway /i      |
+         /Pde\.? /i   | /Parade /i       |
+         /Pk\.? /i    | /Park /i         |
+         /Pl\.? /i    | /Place /i        |
+         /Plz\.? /i   | /Plaza /i        |
+         /Rdg\.? /i   | /Ridge /i        |
+         /Rdy\.? /i   | /Roadway /i      |
+         /Row /i      |
+         /Sq\.? /i    | /Square /i       |
+         /Tce\.? /i   | /Terrace /i      |
+         /Wk\.? /i    | /Walk /i         |
+         /Wy\.? /i	  | /Way /i
+
 };
 
 
-# Suburbs can be up to three words such as Dee Why or St Johns Park.
+# Suburbs can be up to three words 
+# Examples:  Dee Why or St. Johns Park, French's Forest
 
 my $suburb =
 q
 {
-    suburb : suburb_word(1..3)
-    {
-        if ( $item[1][0] and $item[1][1] and $item[1][2] )
-        {
-           $return = "$item[1][0]$item[1][1]$item[1][2]"
-        }
-        elsif ( $item[1][0] and $item[1][1] )
-        {
-           $return = "$item[1][0]$item[1][1]"
-        }
-        else
-        {
-          $return = $item[1][0]
-        }
-    }
 
-    # suburb_word: /[A-Z]{2,}\s+/i
-    suburb_word: ...!subcountry /[A-Z]{2,}\s+/i
+	suburb_prefix :	 
+	
+	    prefix   |  
+	    /Lake /i  
 
+
+    suburb: 
+    
+		# such as Upper Ferntree Gully
+	    suburb_prefix word suburb_word(?)
+	    {
+			if ( $item[3][0]  )
+			{
+				$return = "$item[1]$item[2]$item[3][0]"
+			}
+		    else
+		    {
+		        $return = "$item[1]$item[2]"
+			}
+	    }
+
+		|
+
+
+		# such as  Victoria Valley, Concord West
+		word suburb_word(0..2)
+		{
+			if ( $item[2][0] and $item[2][1]  )
+			{
+			   $return = "$item[1]$item[2][0]$item[2][1]"
+			}
+			elsif ( $item[2][0]  )
+			{
+			   $return = "$item[1]$item[2][0]"
+			}
+			else
+			{
+			  $return = $item[1]
+			}
+		}
+ 
+    suburb_word: ...!subcountry word
+
+	word: /[A-Z'.]{2,}\s+/i
 };
 
 
+# note that Northern territoy codes can be abrreivated to 3 digits
+# Example 0800, 800, 2099
+my $australian_post_code = q{ post_code: /\d{4} ?/  | /8\d{2} ?/ };
 
-my $australian_post_code = q{ post_code: /\d{4} ?/ };
 
 # Thanks to Steve Taylor for supplying format of Canadian post codes
 # Example is K1B 4L7
@@ -455,17 +580,10 @@ sub create
     # Loop over all sub countries to create a grammar for all subcountry
     # combinations for this country. The grammar for Australia would look like
     #
-    # subcountry :  /NEW SOUTH WALES /i |
+    # subcountry :  /NSW /i |
+    #               /QLD /i |
+    #               /NEW SOUTH WALES /i
     #               /QUEENSLAND /i |
-    #               /NSW /i |
-    #               /QLD /i
-
-    my @all_full_names = $subcountry->all_full_names;
-
-    foreach my $full_name (@all_full_names)
-    {
-         $subcountry_grammar .= "\t/$full_name /i |\n";
-    }
 
     my @all_codes = $subcountry->all_codes;
     my $last_code = pop(@all_codes);
@@ -476,6 +594,23 @@ sub create
     }
     # No alternation character needed for last code
     $subcountry_grammar .= "\t/$last_code /\n";
+
+
+	if ( not $address->{abbreviated_subcountry_only} ) 
+	{
+	    $subcountry_grammar .= "| \n";
+
+	    my @all_full_names = $subcountry->all_full_names;
+	    my $last_full_name = pop(@all_full_names);
+
+
+	    foreach my $full_name (@all_full_names)
+	    {
+	        $subcountry_grammar .= "\t/$full_name /i |\n";
+	    }
+	    $subcountry_grammar .= "\t/$last_full_name /\n";
+	}
+
 
     $grammar .= $subcountry_grammar;
 

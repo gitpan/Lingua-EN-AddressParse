@@ -11,7 +11,8 @@ Lingua::EN::AddressParse - manipulate geographical addresses
       country     => 'Australia',
       auto_clean  => 1,
       force_case  => 1,
-      abbreviate_subcountry => 1
+      abbreviate_subcountry => 0,
+	  abbreviated_subcountry_only => 1
    );
 
    my $address = new Lingua::EN::AddressParse(%args);
@@ -31,7 +32,7 @@ Perl, version 5.004 or higher, Lingua::EN::NameParse, Locale::SubCountry, Parse:
 
 This module takes as input an address or post box in free format text such as,
 
-    12/3-5 AUBREY ST VERMONT VIC 3133
+    12/3-5 AUBREY ST MOUNT VICTORIA WA 6133
     "OLD REGRET" WENTWORTH FALLS NSW 2782 AUSTRALIA
     2A OLD SOUTH LOW ST. KEW NEW SOUTH WALES 2123
     GPO Box K318, HAYMARKET, NSW 2000
@@ -104,7 +105,8 @@ optional argument to the C<new> method.
       country     => 'Australia',
       auto_clean  => 1,
       force_case  => 1,
-      abbreviate_subcountry => 1
+      abbreviate_subcountry => 1,
+	  abbreviated_subcountry_only => 1
    );
 
    my $address = new Lingua::EN::AddressParse(%args);
@@ -134,14 +136,22 @@ or reject them.
 
 When this option is set to a positive value, any call to the C<parse> method
 that fails will attempt to 'clean' the address and then reparse it. See the
-C<clean> method for  details. This is useful for dirty data with embedded
-unprintable or non alphabetic characters.
+C<clean> method in Lingua::EN::Nameparse for  details. This is useful for 
+dirty data with embedded unprintable or non alphabetic characters.
 
 =head2 abbreviate_subcountry (optional)
 
 When this option is set to a positive value, the sub country is forced to it's
 abbreviated form, so "New South Wales" becomes "NSW". If the sub country is
 already abbreviated then it's value is not altered.
+
+=head2 abbreviated_subcountry_only (optional)
+
+When this option is set to a positive value, only the abbreviated form
+of sub country is allowed, such as "NSW" and not "New South Wales". This
+will make parsing quicker and ensure that addresses comply with postal 
+standards that normally specify abbrviated sub countries only.
+
 
 =head2 parse
 
@@ -237,8 +247,8 @@ the program is not very fast.
 Australian Standard AS4212-1994 "Geographic Information Systems -
 Data Dictionary for transfer of street addressing information"
 
-ISO 3166-2:1998, Codes for the representation of names of countries and their subdivisions
-Also released as AS/NZS 2632.2:1999
+ISO 3166-2:1998, Codes for the representation of names of countries 
+and their subdivisions. Also released as AS/NZS 2632.2:1999
 
 
 =head1 FUTURE DIRECTIONS
@@ -258,12 +268,13 @@ Lingua::EN::NameParse, Parse::RecDescent, Locale::SubCountry
 
 =head1 BUGS
 
-Streets such as "The Esplanade" will return a street of "The" and a street type
-of "Esplanade".
+Streets such as "The Esplanade" will return a street of "The Espalande" and a 
+street type of null string.
+
 
 =head1 COPYRIGHT
 
-Copyright (c) 2000-1 Kim Ryan. All rights reserved.
+Copyright (c) 1999-2002 Kim Ryan. All rights reserved.
 This program is free software; you can redistribute it
 and/or modify it under the terms of the Perl Artistic License
 (see http://www.perl.com/perl/misc/Artistic.html).
@@ -289,7 +300,7 @@ use strict;
 use Exporter;
 use vars qw (@ISA $VERSION);
 
-$VERSION   = '1.05';
+$VERSION   = '1.10';
 @ISA       = qw(Exporter);
 
 
@@ -399,7 +410,7 @@ sub case_all
 
    my @cased_address;
 
-   unless ( $address->{properties}{type} eq 'unknown'  )
+   unless ( $address->{properties}{type} eq 'unknown' )
    {
       my %component_vals = $address->case_components;
       my @order = @{ $component_order{$address->{properties}{type} } };

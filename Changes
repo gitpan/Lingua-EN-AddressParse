@@ -1,5 +1,25 @@
 Revision history for Perl CPAN module Lingua::EN::AddressParse
 
+1.10 09 Feb 2002
+    Allowed for cases such as "Unit 4 12 Smith St."
+    Improved speed by reordering sequence of street types
+    Added option to only accept short form of sub_country, such as NSW
+
+    Thanks to Peter Schendzielorz for the following suggestions:
+    Allowed sub_country names to occur in suburb, such as Victoria Valley, VIC
+    Added more street types
+    Added more sub property types
+    Added more post box types
+    Added 'Mt', 'Sir' and 'Dame' to street prefixes, as in Mt Baw Baw Rd
+    Allowed for cases like 'Grand Ridge Road'
+    Allowed for cases like 'Close','Glen', 'St' etc to occur in either street name or street type
+    Allowed for apostrophes and full stops in suburb_word, as in French's Forst
+    Allowed for 3 digits post codes such as 800 (in Northern Territory, Aust)
+    Allowed for box_number to end in a letter
+    Allowed property name to be delimited by single or double quotes
+    Accounted for street types as street names, such as 'The Corso', 'The Parkway'
+
+
 1.05 24 Sep 2001
     Added more street types
     Removed duplicated declaration for main.t
