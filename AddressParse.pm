@@ -1,6 +1,6 @@
 =head1 NAME
 
-Lingua::EN::AddressParse - routines for manipulating geographical addresses
+Lingua::EN::AddressParse -  manipulate geographical addresses
 
 =head1 SYNOPSIS
 
@@ -8,6 +8,7 @@ Lingua::EN::AddressParse - routines for manipulating geographical addresses
 
    my %args = 
    (
+   	country     => 'Australia',
       auto_clean  => 1,
       force_case  => 1
    );
@@ -24,18 +25,19 @@ Lingua::EN::AddressParse - routines for manipulating geographical addresses
 
 =head1 REQUIRES
 
-Perl, version 5.001 or higher Lingua::EN::NameParse and Parse::RecDescent
+Perl, version 5.001 or higher, Lingua::EN::NameParse and Parse::RecDescent
 
 
 =head1 DESCRIPTION
 
 
-This module takes as input a person or persons address in 
-free format text such as,
+This module takes as input an address or post box in free format text 
+such as,
 
 	12/3-5 AUBREY ST VERMONT VIC 3133
 	"OLD REGRET" WENTWORTH FALLS NSW 2782 AUSTRALIA
-	2A LoW ST. KEW NSW 2123
+	2A LOW ST. KEW NSW 2123
+   GPO Box K318, HAYMARKET, NSW 2000
 
 and attempts to parse it. If successful, the address is broken
 down into components and useful functions can be performed such as :
@@ -74,7 +76,7 @@ that can make up an address or post box.
    Suburb	     - Dee Why, St. John's Wood ...
    State			  - NSW, ACT, NY, AZ ...
    Post code	  - 2062, 34532, SG12A 9ET 
-   Country		  - Australia, Papua New Guinea ....
+   Country		  - Australia, UK, Papua New Guinea ....
    
 Refer to the component grammar defined within the code for a complete
 list of combinations. 
@@ -83,8 +85,8 @@ list of combinations.
 The following address formats are currently supported :
 
  'suburban' - property_identifier street suburb state post_code country(?) 
- 'post_box' - post_box suburb_state post_code country(?) 
- 'rural'    - property_name suburb_state post_code country(?) 
+ 'post_box' - post_box suburb_subcountry post_code country(?) 
+ 'rural'    - property_name suburb_subcountry post_code country(?) 
 
 
 
@@ -102,13 +104,30 @@ optional argument to the C<new> method.
 
    my %args = 
    (
+   	country     => 'Australia',
       auto_clean  => 1,
       force_case  => 1
    );
 
    my $address = new Lingua::EN::AddressParse(%args); 
 
+=head3 country
 
+The country argument must be specified. It determines the possible list of
+valid subcountries (states, counties etc, defined in the Locale::SubCountry 
+module) and post code formats.The current list of coutries is
+
+   Australia
+   Brazil
+   Canada
+   Netherlands
+   UK
+   USA
+   
+All forms of upper/lower case are acceptable in the country's spelling. If a 
+country name is supplied that the module doesn't recognise, it will die.   
+
+   
 =head3 force_case
 
 This option will force the C<case_all> method to address case the entire input
@@ -200,8 +219,16 @@ Returns any unmatched section that was found.
 The huge number of character combinations that can form a valid address makes
 it is impossible to correctly identify them all.
 
-Valid addresses must contain a suburb, state and post code, in that order
-States must be in abbreviated form such as NSW, VIC, NY, CA
+Valid addresses must contain a suburb, subcountry (state) and post code, 
+in that order. This format is widely accepted in Australia and the US. UK
+addresses will often include suburb, town, city and county, formats that
+are very difficult to parse.
+
+
+Subcountries must be in abbreviated form such as NSW, VIC, NY, CA, LEICS.
+I could add a pre-parse step to detect and abbreivate subcountry names,
+so data sych as "New South Wales" can be parsed.
+
 Property names must be enclosed in quotes like "Old Regret"
 
 Because of the large combination of possible addresses defined in the grammar, 
@@ -227,6 +254,7 @@ languages.
 
 =head1 SEE ALSO
 
+Locale::Subcountry
 Lingua::EN::NameParse
 Parse::RecDescent
 
@@ -245,7 +273,7 @@ Parse::RecDescent
                   
 =head1 COPYRIGHT
 
-Copyright (c) 1999 Kim Ryan. All rights reserved.
+Copyright (c) 2000 Kim Ryan. All rights reserved.
 This program is free software; you can redistribute it 
 and/or modify it under the terms of the Perl Artistic License
 (see http://www.perl.com/perl/misc/Artistic.html).
@@ -253,7 +281,7 @@ and/or modify it under the terms of the Perl Artistic License
 
 =head1 AUTHOR
 
-AddressParse was written by Kim Ryan <kimaryan@ozemail.com.au> in 1999.
+AddressParse was written by Kim Ryan <kimaryan@ozemail.com.au> in 2000.
 
 =cut
 
@@ -263,12 +291,14 @@ package Lingua::EN::AddressParse;
 
 use Lingua::EN::NameParse;
 use Parse::RecDescent;
+use Locale::SubCountry;
+
 use strict;
 
 use Exporter;
 use vars qw (@ISA @EXPORT_OK $VERSION);
 
-$VERSION   = '0.01';
+$VERSION   = '0.02';
 @ISA       = qw(Exporter);
 
 #------------------------------------------------------------------------------
@@ -290,7 +320,7 @@ full_address :
    # always consist of one element, when they exist. 
 
    
-   property_identifier street_prefix(?) street suburb_state post_code country(?) non_matching(?)
+   property_identifier street_prefix(?) street suburb_subcountry post_code country(?) non_matching(?)
    {
       # block of code to define actions upon successful completion of a
       # 'production' or rule
@@ -300,43 +330,43 @@ full_address :
          # Parse::RecDescent lets you return a single scalar, which we use as
          # an anonymous hash reference
          property_identifier => $item[1],
-         street_prefix => $item[2][0],
-         street        => $item[3],
-         suburb_state  => $item[4],
-         post_code     => $item[5],
-         country       => $item[6][0],
-         non_matching  => $item[7][0],
-         type          => 'suburban'
+         street_prefix       => $item[2][0],
+         street              => $item[3],
+         suburb_subcountry   => $item[4],
+         post_code           => $item[5],
+         country             => $item[6][0],
+         non_matching        => $item[7][0],
+         type                => 'suburban'
       }
    }
    |
    
-   property_name suburb_state post_code country(?) non_matching(?)
+   property_name suburb_subcountry post_code country(?) non_matching(?)
    {
       $return =
       {
-         property_name   => $item[1],
-         suburb_state    => $item[2],
-         post_code       => $item[3],
-         country         => $item[4][0],
-         non_matching    => $item[5][0],
-         type            => 'rural'
+         property_name     => $item[1],
+         suburb_subcountry => $item[2],
+         post_code         => $item[3],
+         country           => $item[4][0],
+         non_matching      => $item[5][0],
+         type              => 'rural'
       }
    }
    |
 
 
-   post_box suburb_state post_code country(?) non_matching(?)
+   post_box suburb_subcountry post_code country(?) non_matching(?)
    {
  
       $return =
       {
-         post_box        => $item[1],
-         suburb_state    => $item[2],
-         post_code       => $item[3],
-         country         => $item[4][0],
-         non_matching    => $item[5][0],
-         type            => 'post_box'
+         post_box          => $item[1],
+         suburb_subcountry => $item[2],
+         post_code         => $item[3],
+         country           => $item[4][0],
+         non_matching      => $item[5][0],
+         type              => 'post_box'
       }
    }
    |
@@ -349,6 +379,7 @@ full_address :
          type          => 'unknown'
       }
    }
+   
 };
 
 #------------------------------------------------------------------------------
@@ -356,7 +387,7 @@ full_address :
 # expressed as literals or Perl regular expressions.
 
 
-my $components = 
+my $property_identifier = 
 q{
 
 	property_identifier : sub_property_desc(?) property_number 
@@ -383,9 +414,7 @@ q{
        
     
    # such as 12/66A, 24-34, 2A, 23B/12C, 12/42-44
-   property_number : 
-   
-      number (' '|'/')(?) number(?) ('-')(?) number(?) 
+   property_number : number (' '|'/')(?) number(?) ('-')(?) number(?) 
       
    {
         if ( $item[1] and $item[2] and $item[3][0] and $item[4][0] and $item[5][0] )
@@ -404,17 +433,23 @@ q{
        
     
    # such as 23B
-   number :	/\d{1,5}[A-Z]?/i  
+   number :	/\d{1,5}[A-Z]?/i
    
+};
+
+my $property_name = 
+q{
    # Property or station names like "Old Regret" or "Never Fail"
    property_name : /\"[A-Z]{3,}( [A-Z]{3,})?\" /i   
-      
+};
+
+my $post_box = 
+q{
    
    post_box : box_type box_number
    {
    	$return = "$item[1] $item[2]"
    }
-    
    
    box_type :
    
@@ -428,6 +463,12 @@ q{
            
    
 	box_number : /[A-Z]?\d{1,5} /i
+   
+};
+
+
+my $street = 
+q{
    
    street_prefix : 
       
@@ -454,8 +495,10 @@ q{
       
    street :
    
-   	# 0 occurrence for cases where street name IS in street_prefix,
-      # like South Parade, The Avenue 
+   	# Street name plus street type which is needed to prevent greedy
+      # matches prematurely consuming tokens.
+   	# 0 occurrence is for cases where street name IS in street_prefix,
+      # like South Parade or The Avenue 
       
       /([A-Z'-]{2,} ){0,2}Arcade /i     |
       /([A-Z'-]{2,} ){0,2}Arc?\.? /i    |
@@ -501,104 +544,54 @@ q{
       /([A-Z'-]{2,} ){0,2}Walk /i       |
       /([A-Z'-]{2,} ){0,2}Way /i        |
       /([A-Z'-]{2,} ){0,2}Wy\.? /i  
+};     
       
-     
-      
-   # Suburbs can be up to three words such as Dee Why or St Johns Park.
-   # Because Parse::RecDescent does greedy matching, we must end the regex
-   # with a state. Otherwise the state field may be consumed as part of the 
-   # suburb. The state field is extracted later in the _assemble method.
-   # Note that this approach only allows state to appear as a single word.
-   # State representations like "New South Wales" will not work.
+# Suburbs can be up to three words such as Dee Why or St Johns Park.
+# Because Parse::RecDescent does greedy matching, we must end the regex
+# with a state. Otherwise the state field may be consumed as part of the 
+# suburb. The state field is extracted later in the _assemble method.
+# Note that this approach only allows state to appear as a single word.
+# State representations like "New South Wales" will not work.
    
-   suburb_state :
-    
-   	/([A-Z]{2,} ){1,3}AAT /i |	# Australian Antarctic Territory
-   	/([A-Z]{2,} ){1,3}ACT /i |	# Australian Capital Territory  
-   	/([A-Z]{2,} ){1,3}NT /i	 |	# Northern Territory      
-   	/([A-Z]{2,} ){1,3}NSW /i |	# New South Wales               
-   	/([A-Z]{2,} ){1,3}QLD /i |	# Queensland
-      /([A-Z]{2,} ){1,3}SA /i  | # South Australia
-   	/([A-Z]{2,} ){1,3}TAS /i |	# Tasmania
-   	/([A-Z]{2,} ){1,3}VIC /i |	# Victoria
-   	/([A-Z]{2,} ){1,3}WA /i  |	# Western Australia
-											
-       # USA    
 
-      /([A-Z]{2,} ){1,3}AA /i | # Armed Forces Americas        
-      /([A-Z]{2,} ){1,3}AE /i | # Armed Forces Europe, Middle East, & Canada 
-      /([A-Z]{2,} ){1,3}AP /i | # Armed Forces Pacific                          
-      /([A-Z]{2,} ){1,3}AK /i | # Alaska  
-      /([A-Z]{2,} ){1,3}AL /i | # Alabama  
-      /([A-Z]{2,} ){1,3}AR /i | # Arkansas     
-      /([A-Z]{2,} ){1,3}AS /i | # American Samoa     
-      /([A-Z]{2,} ){1,3}AZ /i | # Arizona  
-      /([A-Z]{2,} ){1,3}CA /i | # California         
-      /([A-Z]{2,} ){1,3}CO /i | # Colorado     
-      /([A-Z]{2,} ){1,3}CT /i | # Connecticut           
-      /([A-Z]{2,} ){1,3}DC /i | # District of Columbia     
-      /([A-Z]{2,} ){1,3}DE /i | # Delaware     
-      /([A-Z]{2,} ){1,3}FL /i | # Florida  
-      /([A-Z]{2,} ){1,3}FM /i | # Federated States of Micronesia  
-      /([A-Z]{2,} ){1,3}GA /i | # Georgia  
-      /([A-Z]{2,} ){1,3}GU /i | # Guam  
-      /([A-Z]{2,} ){1,3}HI /i | # Hawaii  
-      /([A-Z]{2,} ){1,3}IA /i | # Iowa  
-      /([A-Z]{2,} ){1,3}ID /i | # Idaho              
-      /([A-Z]{2,} ){1,3}IL /i | # Illinois          
-      /([A-Z]{2,} ){1,3}IN /i | # Indiana        
-      /([A-Z]{2,} ){1,3}KS /i | # Kansas         
-      /([A-Z]{2,} ){1,3}KY /i | # Kentucky     
-      /([A-Z]{2,} ){1,3}LA /i | # Louisiana                       
-      /([A-Z]{2,} ){1,3}MA /i | # Massachusetts                   
-      /([A-Z]{2,} ){1,3}MD /i | # Maryland     
-      /([A-Z]{2,} ){1,3}ME /i | # Maine     
-      /([A-Z]{2,} ){1,3}MH /i | # Marshall Islands                
-      /([A-Z]{2,} ){1,3}MI /i | # Michigan                           
-      /([A-Z]{2,} ){1,3}MN /i | # Minnesota
-      /([A-Z]{2,} ){1,3}MO /i | # Missouri
-      /([A-Z]{2,} ){1,3}MP /i | # Northern Mariana Islands
-      /([A-Z]{2,} ){1,3}MS /i | # Mississippi
-      /([A-Z]{2,} ){1,3}MT /i | # Montana
-      /([A-Z]{2,} ){1,3}NC /i | # North Carolina
-      /([A-Z]{2,} ){1,3}ND /i | # North Dakota
-      /([A-Z]{2,} ){1,3}NE /i | # Nebraska
-      /([A-Z]{2,} ){1,3}NH /i | # New Hampshire
-      /([A-Z]{2,} ){1,3}NJ /i | # New Jersey
-      /([A-Z]{2,} ){1,3}NM /i | # New Mexico
-      /([A-Z]{2,} ){1,3}NV /i | # Nevada
-      /([A-Z]{2,} ){1,3}NY /i | # New York
-      /([A-Z]{2,} ){1,3}OH /i | # Ohio
-      /([A-Z]{2,} ){1,3}OK /i | # Oklahoma
-      /([A-Z]{2,} ){1,3}OR /i | # Oregon
-      /([A-Z]{2,} ){1,3}PA /i | # Pennsylvania
-      /([A-Z]{2,} ){1,3}PR /i | # Puerto Rico
-      /([A-Z]{2,} ){1,3}PW /i | # Palau
-      /([A-Z]{2,} ){1,3}RI /i | # Rhode Island
-      /([A-Z]{2,} ){1,3}SC /i | # South Carolina
-      /([A-Z]{2,} ){1,3}SD /i | # South Dakota
-      /([A-Z]{2,} ){1,3}TN /i | # Tennessee
-      /([A-Z]{2,} ){1,3}TX /i | # Texas
-      /([A-Z]{2,} ){1,3}UT /i | # Utah
-      /([A-Z]{2,} ){1,3}VA /i | # Virginia
-      /([A-Z]{2,} ){1,3}VI /i | # Virgin Islands
-      /([A-Z]{2,} ){1,3}VT /i | # Vermont
-      /([A-Z]{2,} ){1,3}WA /i | # Washington
-      /([A-Z]{2,} ){1,3}WI /i | # Wisconsin
-      /([A-Z]{2,} ){1,3}WY /i   # Wyoming   
-      
-     
-   post_code:
-    
-      /\d{4,5} ?/ |  # Australia, US
-      /[A-Z]{1,2}\d{1,2}[A-Z]? \d[A-Z]{2} ?/ # UK, such as SG12A 9ET
-      
-   # such as Papua New Guinea   
-   country: /([A-Z]{3,} ?)([A-Z]{3,} ?)?([A-Z]{3,} ?)?/i  
+# template used to consturct suburb_subcountry component at run time
+my $suburb_subcountry_template = q{ /([A-Z]{2,} ){1,3}__sub_country__ /i | };	
+
+# Subcountry component must be defined at run time, in new method
+
+my $australian_post_code = q{	post_code: /\d{4} ?/ };
+
+my $US_post_code = q{ post_code:	 /\d{5} ?/ };
+
+# /[A-Z]{1,2}\d{1,2}[A-Z]? \d[A-Z]{2} ?/ # such as SG12A 9ET
+# Thanks to Mark Summerfiled for supplying UK post code formats
+my $UK_post_code = 
+q{ 
+	post_code: outward_code inward_code
+   {
+   	$return = "$item[1]$item[2]"
+   }
    
-   non_matching: /.*/ 
-               
+   outward_code : 
+   	 /(EC[1-4]|WC[12]|S?W1)[A-Z] / | # London specials
+     	 /[BGLMS]\d\d? / |               # Single letter
+       /[A-Z]{2}\d\d? /                # Double letter
+       
+   inward_code : /\d[ABD-HJLNP-UW-Z]{2} ?/                 
 };
+
+my $country = 
+q{
+   # such as Papua New Guinea, UK   
+   country: /([A-Z]{2,} ?)([A-Z]{3,} ?)?([A-Z]{3,} ?)?/i  
+};
+
+my $non_matching = 
+q{
+   non_matching: /.*/ 
+}; 
+
+              
 
 
 #------------------------------------------------------------------------------
@@ -624,6 +617,10 @@ sub new
 {
    my $class = shift;
    my %args = @_;
+   
+   
+   my $country_for_codes = $args{country};
+   my $subcountry = new Locale::SubCountry($country_for_codes);
 
    my $address = {};
    bless($address,$class);
@@ -634,8 +631,42 @@ sub new
    {
       $address->{$curr_key} = $args{$curr_key};
    }
+   
+   my $grammar = $rules;
+   $grammar .= $property_identifier;
+   $grammar .= $property_name;
+   $grammar .= $post_box;
+   $grammar .= $street;
+   
+   my ($code,$one_suburb_subcountry);
+   my $suburb_subcountry= "suburb_subcountry : ";
+   foreach $code ( $subcountry->all_codes )
+   {
+   	 $one_suburb_subcountry =  $suburb_subcountry_template;
+   	 $one_suburb_subcountry =~ s/__sub_country__/$code/;
+       $suburb_subcountry .=  $one_suburb_subcountry;
+   }
+   
+   $grammar .= $suburb_subcountry;
+   
+   if ( $country_for_codes eq 'Australia' )
+   {
+	   $grammar .= $australian_post_code;
+   }
+   elsif ( $country_for_codes eq 'UK' )
+   {
+	   $grammar .= $UK_post_code;
+   }
+   elsif ( $country_for_codes eq 'USA' )
+   {
+	   $grammar .= $US_post_code;
+   }
+   
+   $grammar .= $country;
+   $grammar .= $non_matching;
 
-   $address->{parse} = new Parse::RecDescent($rules . $components);
+   $address->{parse} = new Parse::RecDescent($grammar);
+   
    
    return ($address);
 }
@@ -786,19 +817,19 @@ sub _assemble
    if ( $parsed_address->{street_prefix} )
    {
       $address->{components}{street} .= $parsed_address->{street_prefix};
-      $address->{components}{street} .= " ";
+      # $address->{components}{street} .= " ";
    }
    
    if ( $parsed_address->{street} )
    {
       $address->{components}{street} .=  &Lingua::EN::NameParse::_trim_space($parsed_address->{street});
    }
-   if ( $parsed_address->{suburb_state} )
+   if ( $parsed_address->{suburb_subcountry} )
    {
-   	my @comps = split(/ /,$parsed_address->{suburb_state});
+   	my @comps = split(/ /,$parsed_address->{suburb_subcountry});
       
       # State in abbreviated form is last component
-      $address->{components}{state} = pop(@comps);
+      $address->{components}{subcountry} = pop(@comps);
       $address->{components}{suburb} = join(' ',@comps);
    }
    

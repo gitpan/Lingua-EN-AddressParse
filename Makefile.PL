@@ -2,6 +2,12 @@ use ExtUtils::MakeMaker;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 
+warn "\n"
+   . "Lingua::EN::AddressParse will not be installed as it requires perl 5.005\n"
+   . "or later and you only have $]\n"
+   if $] < 5.005;
+         
+
 WriteMakefile
 (
    'VERSION_FROM'    => 'AddressParse.pm',
@@ -31,6 +37,7 @@ WriteMakefile
    'PREREQ_PM'       =>         
    {                            
       'Parse::RecDescent' => 0, 
+      'Locale::SubCountry' => 0, 
       'Lingua::EN::NameParse' => 0, 
    }                            
 );

@@ -18,6 +18,7 @@ my $input;
 
   my %args = 
 (
+  country     => 'Australia',
   auto_clean  => 0,
   force_case  => 1
 );
@@ -34,7 +35,7 @@ if
    $comps{property_identifier} eq '12A/74-76' and 
    $comps{street} eq 'Aminta Crescent' and 
    $comps{suburb} eq 'Hasall Grove' and
-   $comps{state} eq 'NSW' and
+   $comps{subcountry} eq 'NSW' and
    $comps{post_code} eq '2761' and
    $comps{country} eq 'AUSTRALIA'
 )
@@ -43,6 +44,8 @@ if
 }
 else
 {
+	print(%comps);
+	
    print "not ok 1\n";  
 }
 
