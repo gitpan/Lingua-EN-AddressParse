@@ -18,15 +18,14 @@ for more details.
 
 =head1 COPYRIGHT
 
-Copyright (c) 1999-2002 Kim Ryan. All rights reserved.
+Copyright (c) 1999-2004 Kim Ryan. All rights reserved.
 This program is free software; you can redistribute it
 and/or modify it under the terms of the Perl Artistic License
 (see http://www.perl.com/perl/misc/Artistic.html).
 
 =head1 AUTHOR
 
-AddressGrammar was written by Kim Ryan <kimaryan@ozemail.com.au>
-<http://www.data-distillers.com>
+AddressGrammar was written by Kim Ryan <kimryan at cpan d-o-t org>
 
 
 =cut
@@ -593,11 +592,10 @@ sub create
 
     foreach my $code (@all_codes)
     {
-         $subcountry_grammar .= "\t/$code /i | \n";
+        $subcountry_grammar .= "\t/$code /i | \n";
     }
     # No alternation character needed for last code
     $subcountry_grammar .= "\t/$last_code /\n";
-
 
 	if ( not $address->{abbreviated_subcountry_only} ) 
 	{
@@ -609,8 +607,10 @@ sub create
 
 	    foreach my $full_name (@all_full_names)
 	    {
+            $full_name = _clean_sub_country_name($full_name);
 	        $subcountry_grammar .= "\t/$full_name /i |\n";
 	    }
+        $last_full_name = _clean_sub_country_name($last_full_name);
 	    $subcountry_grammar .= "\t/$last_full_name /\n";
 	}
 
@@ -649,6 +649,28 @@ sub create
     return($grammar);
 
 }
+#-------------------------------------------------------------------------------
+# Some sub countries contain descriptive text, such as 
+# "Swansea [Abertawe GB-ATA]" in UK, Wales , which should be removed
+
+sub _clean_sub_country_name
+{
+    my ($sub_country_name) = @_;
+
+    my $cleaned_sub_country_name;
+    if ( $sub_country_name =~ /\[/ )
+    {
+        # detect any portion in square brackets
+        $sub_country_name =~ /^(\w.*) \[.*\]$/;
+        $cleaned_sub_country_name = $1;
+    }
+    else
+    {
+        $cleaned_sub_country_name = $sub_country_name;
+    }
+    return($cleaned_sub_country_name)
+}
+
 #-------------------------------------------------------------------------------
 1;
 

@@ -1,8 +1,8 @@
 #------------------------------------------------------------------------------
 # Test script for Lingua::EN::::AddressParse.pm
 #
-# Author: Kim Ryan (kimaryan@ozemail.com.au)
-# Date  : 10 January 2000
+# Author      : Kim Ryan
+# Last update : 23 Mar 2002
 #------------------------------------------------------------------------------
 
 use strict;

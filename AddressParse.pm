@@ -59,7 +59,7 @@ The following terms are used by AddressParse to define
 the components that can make up an address or post box.
 
    Post Box -  GP0 Box K123, LPO 2345, RMS 23 ...
-   
+
    Property Identifier
        Sub property description - Level, Unit, Apartment, Lot ...
        Property number          - 12/66A, 24-34, 2A, 23B/12C, 12/42-44
@@ -136,7 +136,7 @@ or reject them.
 
 When this option is set to a positive value, any call to the C<parse> method
 that fails will attempt to 'clean' the address and then reparse it. See the
-C<clean> method in Lingua::EN::Nameparse for  details. This is useful for 
+C<clean> method in Lingua::EN::Nameparse for  details. This is useful for
 dirty data with embedded unprintable or non alphabetic characters.
 
 =head2 abbreviate_subcountry (optional)
@@ -149,7 +149,7 @@ already abbreviated then it's value is not altered.
 
 When this option is set to a positive value, only the abbreviated form
 of sub country is allowed, such as "NSW" and not "New South Wales". This
-will make parsing quicker and ensure that addresses comply with postal 
+will make parsing quicker and ensure that addresses comply with postal
 standards that normally specify abbrviated sub countries only.
 
 
@@ -194,7 +194,7 @@ used for each component-
     post_code
     country
 
-If a key has no matching data for a given address, it's values will be 
+If a key has no matching data for a given address, it's values will be
 set to the empty string.
 
 =head2 components
@@ -247,7 +247,7 @@ the program is not very fast.
 Australian Standard AS4212-1994 "Geographic Information Systems -
 Data Dictionary for transfer of street addressing information"
 
-ISO 3166-2:1998, Codes for the representation of names of countries 
+ISO 3166-2:1998, Codes for the representation of names of countries
 and their subdivisions. Also released as AS/NZS 2632.2:1999
 
 
@@ -268,21 +268,20 @@ Lingua::EN::NameParse, Parse::RecDescent, Locale::SubCountry
 
 =head1 BUGS
 
-Streets such as "The Esplanade" will return a street of "The Espalande" and a 
+Streets such as "The Esplanade" will return a street of "The Espalande" and a
 street type of null string.
 
 
 =head1 COPYRIGHT
 
-Copyright (c) 1999-2002 Kim Ryan. All rights reserved.
+Copyright (c) 1999-2004 Kim Ryan. All rights reserved.
 This program is free software; you can redistribute it
 and/or modify it under the terms of the Perl Artistic License
 (see http://www.perl.com/perl/misc/Artistic.html).
 
 =head1 AUTHOR
 
-AddressParse was written by Kim Ryan <kimaryan@ozemail.com.au>.
-<http://www.data-distillers.com>
+AddressParse was written by Kim Ryan <<kimryan at cpan d o t org>
 
 =cut
 
@@ -300,7 +299,7 @@ use strict;
 use Exporter;
 use vars qw (@ISA $VERSION);
 
-$VERSION   = '1.11';
+$VERSION   = '1.12';
 @ISA       = qw(Exporter);
 
 

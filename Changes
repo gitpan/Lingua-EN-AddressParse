@@ -1,5 +1,9 @@
 Revision history for Perl CPAN module Lingua::EN::AddressParse
 
+1.12 07 Mar 2004
+    Removed any sub country desciptive text (in square brackets) that occurs from grammar.
+    This was needed because of an upgrade to the data in Locale-SubCountry
+
 1.11 21 Mar 2002
     Let user specify country argument to 'new' method as either country 
     code (AU) or full name (AUSTRALIA). Changed documentation to reflect 

@@ -25,7 +25,7 @@ WriteMakefile
    ( $] >= 5.005 ?
       (
           ABSTRACT => 'Extract components of mailing addresses',
-          AUTHOR   => 'Kim Ryan <kimaryan@ozemail.com.au>',
+          AUTHOR   => 'Kim Ryan',
       ) : () 
    ),
    
