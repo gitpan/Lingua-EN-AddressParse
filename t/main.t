@@ -1,8 +1,8 @@
 #------------------------------------------------------------------------------
-# Test script for Lingua::EN::::AddressParse.pm 
-#                                            
-# Author: Kim Ryan (kimaryan@ozemail.com.au) 
-# Date  : 10 January 2000                         
+# Test script for Lingua::EN::::AddressParse.pm
+#
+# Author: Kim Ryan (kimaryan@ozemail.com.au)
+# Date  : 10 January 2000
 #------------------------------------------------------------------------------
 
 use strict;
@@ -10,50 +10,89 @@ use Lingua::EN::AddressParse;
 
 # We start with some black magic to print on failure.
 
-BEGIN { print "1..2\n"; }
+BEGIN { print "1..4\n"; }
 
 # Main tests
 
 my $input;
 
-  my %args = 
+  my %args =
 (
   country     => 'Australia',
   auto_clean  => 0,
   force_case  => 1
 );
 
-my $address = new Lingua::EN::AddressParse(%args); 
+my $address = new Lingua::EN::AddressParse(%args);
 
 
-# Test component extraction
-$input = "12A/74-76 AMINTA CRESCENT HASALL GROVE NSW 2761 AUSTRALIA";
+# Test suburban address
+$input = "12A/74-76 OLD AMINTA CRESCENT HASALL GROVE NEW SOUTH WALES 2761 AUSTRALIA";
 $address->parse($input);
 my %comps = $address->case_components;
-if 
-( 
-   $comps{property_identifier} eq '12A/74-76' and 
-   $comps{street} eq 'Aminta Crescent' and 
+if
+(
+   $comps{property_identifier} eq '12A/74-76' and
+   $comps{street} eq 'Old Aminta' and
+   $comps{street_type } eq 'Crescent' and
    $comps{suburb} eq 'Hasall Grove' and
-   $comps{subcountry} eq 'NSW' and
+   $comps{subcountry} eq 'NEW SOUTH WALES' and
    $comps{post_code} eq '2761' and
    $comps{country} eq 'AUSTRALIA'
 )
 {
-   print "ok 1\n";   
+   print "ok 1\n";
 }
 else
 {
-	print(%comps);
-	
-   print "not ok 1\n";  
+    print "not ok 1\n";
+}
+
+# Test rural address
+$input = '"OLD REGRET" WENTWORTH FALLS NSW 2780';
+$address->parse($input);
+%comps = $address->components;
+if
+(
+   $comps{property_name} eq '"OLD REGRET"' and
+   $comps{suburb} eq 'WENTWORTH FALLS' and
+   $comps{subcountry} eq 'NSW' and
+   $comps{post_code} eq '2780'
+)
+{
+   print "ok 2\n";
+}
+else
+{
+    print "not ok 2\n";
+}
+
+# Test PO Box 
+
+$input = 'PO BOX 71 TOONGABBIE NSW 2146';
+$address->parse($input);
+%comps = $address->components;
+if
+(
+   $comps{post_box} eq 'PO BOX 71' and
+   $comps{suburb} eq 'TOONGABBIE' and
+   $comps{subcountry} eq 'NSW' and
+   $comps{post_code} eq '2146'
+)
+{
+   print "ok 3\n";
+}
+else
+{
+    print "not ok 3\n";
 }
 
 
-# Test non matching 
+
+# Test non matching
 $input = "12 SMITH ST ULTIMO NSW 2007 : ALL POSTAL DELIVERIES";
 $address->parse($input);
 my %props = $address->properties;
-print $props{non_matching} eq ": ALL POSTAL DELIVERIES" ? "ok 2\n" : "not ok 2\n";
-      
+print $props{non_matching} eq ": ALL POSTAL DELIVERIES" ? "ok 4\n" : "not ok 4\n";
+
 
