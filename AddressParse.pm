@@ -289,14 +289,13 @@ package Lingua::EN::AddressParse;
 use Lingua::EN::AddressGrammar;
 use Lingua::EN::NameParse;
 use Parse::RecDescent;
-use Locale::SubCountry;
 
 use strict;
 
 use Exporter;
 use vars qw (@ISA $VERSION);
 
-$VERSION   = '1.00';
+$VERSION   = '1.01';
 @ISA       = qw(Exporter);
 
 

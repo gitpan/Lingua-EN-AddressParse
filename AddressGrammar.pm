@@ -29,9 +29,7 @@ AddressGrammar was written by Kim Ryan <kimaryan@ozemail.com.au> in 1999.
 
 package Lingua::EN::AddressGrammar;
 
-use Locale::Subcountry;
-
-   
+use Locale::SubCountry;
 
 #-------------------------------------------------------------------------------
 # Rules that define valid orderings of an addresses components
@@ -93,16 +91,16 @@ full_address :
          type              => 'post_box'
       }
    }
-   |
+#   |
 
-   non_matching(?)
-   {
-      $return =
-      {
-         non_matching  => $item[1][0],
-         type          => 'unknown'
-      }
-   }
+#    non_matching(?)
+#    {
+#       $return =
+#       {
+#          non_matching  => $item[1][0],
+#          type          => 'unknown'
+#       }
+#    }
    
 };
 
