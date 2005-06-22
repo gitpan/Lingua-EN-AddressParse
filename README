@@ -10,44 +10,58 @@ SYNOPSIS
    (
       country     => 'Australia',
       auto_clean  => 1,
-      force_case  => 1
+      force_case  => 1,
+      abbreviate_subcountry => 0,
+      abbreviated_subcountry_only => 1
    );
 
    my $address = new Lingua::EN::AddressParse(%args);
-
-   $error = $address->parse("14A MAIN RD. ST JOHNS WOOD NEW SOUTH WALES 2000");
+   $error = $address->parse(
+       "UNIT 2A 14-16 OLD SOUTH HEAD ST ST JOHNS WOOD NSW 2021 AUSTRALIA : HOLD MAIL");
 
    %my_address = $address->components;
-   $suburb = $my_address{suburb};
+   print $my_address{sub_property_identifier}; # UNIT 2A
+   print $my_address{property_identifier};     # 14-16
+
+   print $my_address{suburb};                  # ST JOHNS WOOD
+
+   %my_formatted_address = $address->case_components;
+   print $my_formatted_address{street};        # Old South Head
+   print $my_formatted_address{street_type};   # St
+
+   %address_properties = $address->properties;
+   print $address_properties{type};            # suburban
+   print $address_properties{non_matching};    # : HOLD MAIL
 
    $correct_casing = $address->case_all;
 
 
 DESCRIPTION
 
+This module takes as input a suburban, rural or postal address in free format
+text such as,
 
-This module takes as input an address or post box in free format text
-such as,
-
-    12/3-5 AUBREY ST MOUNT VICTORIA WA 6133
+    2A LOW ST KEW NSW 2123
+    12/3-5 AUBREY ST MOUNT VICTORIA VICTORIA 3133
     "OLD REGRET" WENTWORTH FALLS NSW 2782 AUSTRALIA
-    2A OLD SOUTH LOW ST. KEW NEW SOUTH WALES 2123
     GPO Box K318, HAYMARKET, NSW 2000
 
-and attempts to parse it. If successful, the address is broken
-down into components and useful functions can be performed such as :
+    12 1st Avenue N Suite # 2 Somewhere, CA 12345 USA
 
-   converting upper or lower case values to name case (2 Low St. Kew NSW 2123 )
-   extracting the addresses individual components     (2,Low St.,KEW,NSW,2123 )
-   determining the type of format the address is in   ('suburban')
+and attempts to parse it. If successful, the address is broken
+down into it's components and useful functions can be performed such as :
+
+   converting upper or lower case values to title case (2A Low St Kew NSW 2123)
+   extracting the addresses individual components      (2A,Low,St,KEW,NSW,2123)
+   determining the type of format the address is in    ('suburban')
 
 
 If the address cannot be parsed you have the option of cleaning the address
-of bad characters, or extracting any portion that was parsed and the
-portion that failed.
+of bad characters, or extracting any portion that was parsed and the portion
+that failed.
 
 This module can be used for analysing and improving the quality of
-lists of addresses.
+lists of postal addresses.
 
 
 REQUIRES

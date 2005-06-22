@@ -1,7 +1,24 @@
 Revision history for Perl CPAN module Lingua::EN::AddressParse
 
+1.13 22 Jun 2005
+
+    Added US style sub properties, such as 123 Main St Suite # 12 Somewhere CA 92345 
+    Added US style street directional suffix, such as 123 Main St S Somewhere CA 92345 
+
+    Added new address type 'road_box'. This allows for box identifier such as RMB, 
+    optionally street name and type, then suburb and post code.
+
+    Sub property values are now returned as as separate component sub_property_identifier, 
+    not as part of the property_identifier component
+
+    Created a better grammar for property_identifier
+    Removed incorrect validity tests that were not accounting for ordinal street types
+    Fixed auto_clean option so that numbers are retained in ordinal street types!
+    Expanded and improved documentation and comments
+
+
 1.12 07 Mar 2004
-    Removed any sub country desciptive text (in square brackets) that occurs from grammar.
+    Removed any sub country descriptive text (in square brackets) that occurs from grammar.
     This was needed because of an upgrade to the data in Locale-SubCountry
 
 1.11 21 Mar 2002
@@ -16,7 +33,7 @@ Revision history for Perl CPAN module Lingua::EN::AddressParse
 1.10 09 Feb 2002
     Allowed for cases such as "Unit 4 12 Smith St."
     Improved speed by reordering sequence of street types
-    Added option to only accept short form of sub_country, such as NSW
+    Added option to only accept short form of sub_country, such as NW
 
     Thanks to Peter Schendzielorz for the following suggestions:
     Allowed sub_country names to occur in suburb, such as Victoria Valley VIC

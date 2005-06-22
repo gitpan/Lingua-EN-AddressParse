@@ -50,12 +50,13 @@ else
     print "not ok 1\n";
 }
 
-$input = "12 Queen's Park Road Queens Park NSW 2022 ";
+$input = "Unit 4 12 Queen's Park Road Queens Park NSW 2022 ";
 $address->parse($input);
 %comps = $address->case_components;
 if
 (
    $comps{property_identifier} eq '12' and
+   $comps{sub_property_identifier} eq 'Unit 4' and
    $comps{street} eq "Queen\'s Park" and
    $comps{street_type } eq 'Road' and
    $comps{suburb} eq 'Queens Park' and
@@ -126,14 +127,16 @@ print $props{non_matching} eq ": ALL POSTAL DELIVERIES" ? "ok 5\n" : "not ok 5\n
 
 $address = new Lingua::EN::AddressParse(%args);
 
-$input = "12 AMINTA CRESCENT BEVERLEY HILLS CA 90210-1234";
+$input = "12 AMINTA CRESCENT S APT # 12 BEVERLEY HILLS CA 90210-1234";
 $address->parse($input);
 %comps = $address->case_components;
 if
 (
    $comps{property_identifier} eq '12' and
+   $comps{sub_property_identifier} eq 'Apt # 12' and
    $comps{street} eq 'Aminta' and
    $comps{street_type } eq 'Crescent' and
+   $comps{street_direction } eq 'S' and
    $comps{suburb} eq 'Beverley Hills' and
    $comps{subcountry} eq 'CA' and
    $comps{post_code} eq '90210-1234'

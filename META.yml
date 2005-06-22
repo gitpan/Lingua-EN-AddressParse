@@ -1,0 +1,13 @@
+# http://module-build.sourceforge.net/META-spec.html
+#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
+name:         Lingua-EN-AddressParse
+version:      1.13
+version_from: AddressParse.pm
+installdirs:  site
+requires:
+    Lingua::EN::NameParse:         0
+    Locale::SubCountry:            0
+    Parse::RecDescent:             0
+
+distribution_type: module
+generated_by: ExtUtils::MakeMaker version 1.34

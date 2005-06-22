@@ -6,3 +6,4 @@ demo.pl
 AddressParse.pm
 AddressGrammar.pm
 t/main.t
+META.yml                                 Module meta-data (added by MakeMaker)
