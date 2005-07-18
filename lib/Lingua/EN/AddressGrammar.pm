@@ -16,23 +16,23 @@ To avoid premature matches, when one rule is a sub set of another longer rule,
 it must appear after the longer rule. See the Parse::RecDescent documentation
 for more details.
 
-=head1 COPYRIGHT
-
-Copyright (c) 1999-2005 Kim Ryan. All rights reserved.
-This program is free software; you can redistribute it
-and/or modify it under the terms of the Perl Artistic License
-(see http://www.perl.com/perl/misc/Artistic.html).
-
 =head1 AUTHOR
 
 AddressGrammar was written by Kim Ryan, kimryan at cpan d-o-t or g
 
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (c) 2005 Kim Ryan. All rights reserved.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.4 or,
+at your option, any later version of Perl 5 you may have available.
 
 =cut
 #-------------------------------------------------------------------------------
 
 package Lingua::EN::AddressGrammar;
-
+use strict;
 use Locale::SubCountry;
 
 #-------------------------------------------------------------------------------
@@ -527,7 +527,7 @@ q{
     
     # A single word. Use look ahead to prevent the second name of a two word
     # street_type being consumed too early. For example, Street in Green Street 
-    # Even two leeter streets such ab 'By Street' are valid
+    # Even two letter streets such as 'By Street' are valid
 
     street_name_word: ...!street_type /[A-Z'-]{2,}\s+/i
     { 
@@ -606,7 +606,6 @@ q{
 my $suburb =
 q
 {
-
     suburb_prefix :  
     
         prefix   |  
@@ -627,10 +626,9 @@ q
                 $return = "$item[1]$item[2]"
             }
         }
-
         |
 
-
+        # query??? use 0..1
         # such as  Victoria Valley, Concord West
         word suburb_word(0..2)
         {
@@ -653,9 +651,10 @@ q
     word: /[A-Z'.]{2,}\s+/i
 };
 
+
 #------------------------------------------------------------------------------
 
-# note that Northern territoy codes can be abrreivated to 3 digits
+# note that Northern territory codes can be abbreviated to 3 digits
 # Example 0800, 800, 2099
 my $australian_post_code = q{ post_code: /\d{4} ?/  | /8\d{2} ?/ };
 
@@ -668,7 +667,7 @@ my $canadian_post_code = q{ post_code: /[A-Z]\d[A-Z] \d[A-Z]\d ?/ };
 # Thanks to Mike Edwards for supplying US zip code formats
 my $US_post_code =       q{ post_code: /\d{5}(-?\d{4})? ?/};
 
-# Thanks to Mark Summerfiled for supplying UK post code formats
+# Thanks to Mark Summerfield for supplying UK post code formats
 # Example is SW1A 9ET
 
 my $UK_post_code =
@@ -725,7 +724,7 @@ q{
 my $non_matching =  q{ non_matching: /.*/ };
 
 #-------------------------------------------------------------------------------
-sub create
+sub _create
 {
     my $address = shift;
 
@@ -795,10 +794,10 @@ sub create
             $full_name = _clean_sub_country_name($full_name);
             $subcountry_grammar .= "\t/$full_name /i |\n";
         }
+
         $last_full_name = _clean_sub_country_name($last_full_name);
         $subcountry_grammar .= "\t/$last_full_name /\n";
     }
-
 
     $grammar .= $subcountry_grammar;
 

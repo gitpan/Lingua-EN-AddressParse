@@ -1,11 +1,10 @@
-#! /usr/local/bin/perl
+#!/usr/local/bin/perl
 
 # Demo script for Lingua::EN::AddressParse.pm
 
-# $::RD_HINT  = 1;
-# $::RD_TRACE = 1;
-
+use strict;
 use Lingua::EN::AddressParse;
+
 
 my %args =
 (
@@ -24,30 +23,30 @@ open(ERROR_FH,">error.txt") or die;
 my $errors;
 while ( <DATA> )
 {
-	# last if $. == 3;
+    # last if $. == 3;
     chomp($_);
     $address_in = $_;
 
-	$total++;
-	my $error = $address->parse($address_in);
+    $total++;
+    my $error = $address->parse($address_in);
 
-	%comps = $address->case_components;
-	%props = $address->properties;
+    %comps = $address->case_components;
+    %props = $address->properties;
 
-	if ( $error and $props{type} eq 'unknown' )
-	{
+    if ( $error and $props{type} eq 'unknown' )
+    {
         $errors++;
-		print(ERROR_FH "$address_in: $props{non_matching}\n");
-	}
-	else
-	{
-	 	$line = sprintf("%-8.8s : %-10.10s %-10.10s %-20.20s %-10.10s %-2.2s %-15.15s %-15.15s %-15.15s %-20.20s %-15.15s %-10.10s %-14.14s %-30.30s\n",
+        print(ERROR_FH "$address_in: $props{non_matching}\n");
+    }
+    else
+    {
+        $line = sprintf("%-8.8s : %-10.10s %-10.10s %-20.20s %-10.10s %-2.2s %-15.15s %-15.15s %-15.15s %-20.20s %-15.15s %-10.10s %-14.14s %-30.30s\n",
             $props{type},
-	   		$comps{sub_property_identifier},$comps{property_identifier},
-	   		$comps{street},$comps{street_type},$comps{street_direction},
+            $comps{sub_property_identifier},$comps{property_identifier},
+            $comps{street},$comps{street_type},$comps{street_direction},
             $comps{property_name},$comps{post_box},$comps{road_box},
-	        $comps{suburb},$comps{subcountry},$comps{post_code},$comps{country},$props{non_matching});
-		print(REPORT_FH $line);
+            $comps{suburb},$comps{subcountry},$comps{post_code},$comps{country},$props{non_matching});
+        print(REPORT_FH $line);
    }
 }
 $now = localtime(time);

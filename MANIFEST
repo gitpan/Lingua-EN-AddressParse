@@ -3,7 +3,9 @@ README
 Changes
 Makefile.PL
 demo.pl
-AddressParse.pm
-AddressGrammar.pm
+lib/Lingua/EN/AddressParse.pm
+lib/Lingua/EN/AddressGrammar.pm
 t/main.t
-META.yml                                 Module meta-data (added by MakeMaker)
+t/pod.t
+t/pod-coverage.t
+META.yml

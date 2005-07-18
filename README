@@ -64,9 +64,8 @@ This module can be used for analysing and improving the quality of
 lists of postal addresses.
 
 
-REQUIRES
+DEPENDANCIES
 
-Perl, version 5.005 or higher
 Lingua::EN::NameParse
 Parse::RecDescent
 Locale::SubCountry
@@ -82,16 +81,17 @@ HOW TO INSTALL
 BUGS
 
 
-COPYRIGHT
-
-Copyright (c) 1999-2004 Kim Ryan. All rights reserved.
-This program is free software; you can redistribute it
-and/or modify it under the terms of the Perl Artistic License
-(see http://www.perl.com/perl/misc/Artistic.html ).
-
 AUTHOR
 
-AddressParse was written by Kim Ryan, kimryan at cpan dot org
+AddressParse was written by Kim Ryan <<kimryan at cpan d o t org>
+
+COPYRIGHT AND LICENSE
+
+Copyright (c) 2005 Kim Ryan. All rights reserved.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.4 or,
+at your option, any later version of Perl 5 you may have available.
 
 
 

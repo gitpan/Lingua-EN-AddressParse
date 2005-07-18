@@ -4,36 +4,36 @@ Lingua::EN::AddressParse - manipulate geographical addresses
 
 =head1 SYNOPSIS
 
-   use Lingua::EN::AddressParse;
+    use Lingua::EN::AddressParse;
 
-   my %args =
-   (
+    my %args =
+    (
       country     => 'Australia',
       auto_clean  => 1,
       force_case  => 1,
       abbreviate_subcountry => 0,
       abbreviated_subcountry_only => 1
-   );
+    );
 
-   my $address = new Lingua::EN::AddressParse(%args);
-   $error = $address->parse(
+    my $address = new Lingua::EN::AddressParse(%args);
+    $error = $address->parse(
        "UNIT 2A 14-16 OLD SOUTH HEAD ST ST JOHNS WOOD NSW 2021 AUSTRALIA : HOLD MAIL");
 
-   %my_address = $address->components;
-   print $my_address{sub_property_identifier}; # UNIT 2A
-   print $my_address{property_identifier};     # 14-16
+    %my_address = $address->components;
+    print $my_address{sub_property_identifier}; # UNIT 2A
+    print $my_address{property_identifier};     # 14-16
 
-   print $my_address{suburb};                  # ST JOHNS WOOD
+    print $my_address{suburb};                  # ST JOHNS WOOD
 
-   %my_formatted_address = $address->case_components;
-   print $my_formatted_address{street};        # Old South Head
-   print $my_formatted_address{street_type};   # St
+    %my_formatted_address = $address->case_components;
+    print $my_formatted_address{street};        # Old South Head
+    print $my_formatted_address{street_type};   # St
 
-   %address_properties = $address->properties;
-   print $address_properties{type};            # suburban
-   print $address_properties{non_matching};    # : HOLD MAIL
+    %address_properties = $address->properties;
+    print $address_properties{type};            # suburban
+    print $address_properties{non_matching};    # : HOLD MAIL
 
-   $correct_casing = $address->case_all;
+    $correct_casing = $address->case_all;
 
 
 =head1 DESCRIPTION
@@ -51,9 +51,9 @@ text such as,
 and attempts to parse it. If successful, the address is broken
 down into it's components and useful functions can be performed such as :
 
-   converting upper or lower case values to title case (2A Low St Kew NSW 2123)
-   extracting the addresses individual components      (2A,Low,St,KEW,NSW,2123)
-   determining the type of format the address is in    ('suburban')
+    converting upper or lower case values to title case (2A Low St Kew NSW 2123)
+    extracting the addresses individual components      (2A,Low,St,KEW,NSW,2123)
+    determining the type of format the address is in    ('suburban')
 
 
 If the address cannot be parsed you have the option of cleaning the address
@@ -68,18 +68,18 @@ lists of postal addresses.
 The following terms are used by AddressParse to define
 the components that can make up an address.
 
-   Sub property identifier : Level 1A Unit 2, Apartment B, Lot 12, Suite # 12 ...
-   Property Identifier : 12/66A, 24-34, 2A, 23B/12C, 12/42-44
+    Sub property identifier : Level 1A Unit 2, Apartment B, Lot 12, Suite # 12 ...
+    Property Identifier : 12/66A, 24-34, 2A, 23B/12C, 12/42-44
 
-   Property name : "Old Regret"
-   Post Box      : GP0 Box K123, LPO 2345, RMS 23 ...
-   Road Box      : RMB 24A, RMS 234 ...
-   Street name   : O'Hare, New South Head, The Causeway
-   Street type   : Road, Rd., St, Lane, Highway, Crescent, Circuit ...
-   Suburb        : Dee Why, St. John's Wood ...
-   Sub country   : NSW, New South Wales, ACT, NY, AZ ...
-   Post code     : 2062, 34532, SG12A 9ET
-   Country       : Australia, UK, US or Canada
+    Property name : "Old Regret"
+    Post Box      : GP0 Box K123, LPO 2345, RMS 23 ...
+    Road Box      : RMB 24A, RMS 234 ...
+    Street name   : O'Hare, New South Head, The Causeway
+    Street type   : Road, Rd., St, Lane, Highway, Crescent, Circuit ...
+    Suburb        : Dee Why, St. John's Wood ...
+    Sub country   : NSW, New South Wales, ACT, NY, AZ ...
+    Post code     : 2062, 34532, SG12A 9ET
+    Country       : Australia, UK, US or Canada
 
 Refer to the component grammar defined in the AddressGrammar module for a
 complete list of combinations.
@@ -88,14 +88,14 @@ complete list of combinations.
 The following address formats are currently supported.
 A ? means the component is optional:
 
- 'suburban' : sub_property_identifier(?) property_identifier(?) street street_type suburb subcountry post_code country(?)
- OR for the USA
- 'suburban' : property_identifier(?) street street_type sub_property_identifier(?) suburb subcountry post_code country(?)
+    'suburban' : sub_property_identifier(?) property_identifier(?) street street_type suburb subcountry post_code country(?)
+    OR for the USA
+    'suburban' : property_identifier(?) street street_type sub_property_identifier(?) suburb subcountry post_code country(?)
 
- 'rural'    : property_name suburb subcountry post_code country(?)
- 'post_box' : post_box suburb subcountry post_code country(?)
- 'road_box' : road_box street street_type suburb subcountry post_code country(?)
- 'road_box' : road_box suburb subcountry post_code country(?)
+    'rural'    : property_name suburb subcountry post_code country(?)
+    'post_box' : post_box suburb subcountry post_code country(?)
+    'road_box' : road_box street street_type suburb subcountry post_code country(?)
+    'road_box' : road_box suburb subcountry post_code country(?)
 
 
 =head1 METHODS
@@ -110,56 +110,59 @@ created once, and can be reused with new input data.
 Various setup options may be defined in a hash that is passed as an
 optional argument to the C<new> method.
 
-   my %args =
-   (
+    my %args =
+    (
       country     => 'Australia',
       auto_clean  => 1,
       force_case  => 1,
       abbreviate_subcountry => 1,
       abbreviated_subcountry_only => 1
-   );
+    );
 
-   my $address = new Lingua::EN::AddressParse(%args);
+    my $address = new Lingua::EN::AddressParse(%args);
 
-=head2 country
+=over 4
+
+=item country
 
 The country argument must be specified. It determines the possible list of
 valid sub countries (states, counties etc, defined in the Locale::SubCountry
 module) and post code formats. Either the full name or abbreviation may be
 specified. The currently suppoted country names and codes are:
 
-   AU or Australia
-   CA or Canada
-   GB or United Kingdom
-   US or United States
+    AU or Australia
+    CA or Canada
+    GB or United Kingdom
+    US or United States
 
 All forms of upper/lower case are acceptable in the country's spelling. If a
 country name is supplied that the module doesn't recognise, it will die.
 
-=head2 force_case (optional)
+=item force_case (optional)
 
 This option only applies to the e C<case_all> method, see below.
 
-=head2 auto_clean  (optional)
+=item auto_clean  (optional)
 
 When this option is set to a positive value, any call to the C<parse> method
 that fails will attempt to 'clean' the address and then reparse it. See the
 C<clean> method in Lingua::EN::Nameparse for details. This is useful for
 dirty data with embedded unprintable or non alphabetic characters.
 
-=head2 abbreviate_subcountry (optional)
+=item abbreviate_subcountry (optional)
 
 When this option is set to a positive value, the sub country is forced to it's
 abbreviated form, so "New South Wales" becomes "NSW". If the sub country is
 already abbreviated then it's value is not altered.
 
-=head2 abbreviated_subcountry_only (optional)
+=item abbreviated_subcountry_only (optional)
 
 When this option is set to a positive value, only the abbreviated form
 of sub country is allowed, such as "NSW" and not "New South Wales". This
 will make parsing quicker and ensure that addresses comply with postal
 standards that normally permit ony abbrviated sub countries .
 
+=back
 
 =head2 parse
 
@@ -179,8 +182,8 @@ This method is a prerequisite for all the following methods.
 
 =head2 components
 
-   %address = $address->components;
-   $surburb = $address{suburb};
+    %address = $address->components;
+    $surburb = $address{suburb};
 
 The C<components> method returns all the address componets in a hash. The 
 following keys are used for each component-
@@ -204,7 +207,7 @@ set to the empty string.
 
 =head2 case_components
 
-   %my_address = $address->components;
+   %my_address = $address->case_components;
    $cased_suburb = $my_address{suburb};
 
 The C<case_components> method does the same thing as the C<components> method,
@@ -243,9 +246,21 @@ The  following keys are used for each property -
     non_matching (any non matching portion of the input string)
 
 
-=head1 REQUIRES
+=head2 report
 
-Lingua::EN::NameParse, Locale::SubCountry, Parse::RecDescent
+Create a formatted text report 
+
+    the input string 
+    the name and value of each defined component 
+    the addrsess type
+    if any parsing errors occured
+    any non matching component
+
+Returns a string containing a multi line formatted text report
+
+=head1 DEPENDANCIES
+
+L<Lingua::EN::NameParse>, L<Locale::SubCountry>, L<Parse::RecDescent>
 
 =head1 BUGS
 
@@ -255,10 +270,9 @@ Streets such as 'The Esplanade' will return a street of 'The Esplanade' and a
 street type of null string.
 
 For US addresses, an ambiguity arises between a street directional suffix and 
-a suburb directional prefix, such as '12 Main St S Sprinfield CA 92345'. Is it South
-Main St, or South Springfiled. The parser assumes that 'S' belongs to the street
+a suburb directional prefix, such as '12 Main St S Springfield CA 92345'. Is it South
+Main St, or South Springfield. The parser assumes that 'S' belongs to the street
 description.
-
 
 The huge number of character combinations that can form a valid address makes
 it is impossible to correctly identify them all.
@@ -268,7 +282,7 @@ in that order. This format is widely accepted in Australia and the US. UK
 addresses will often include suburb, town, city and county, formats that
 are very difficult to parse.
 
-Property names must be enclosed in quotes like "Old Regret"
+Property names must be enclosed in sinlle or double quotes like "Old Regret"
 
 Because of the large combination of possible addresses defined in the grammar,
 the program is not very fast.
@@ -289,12 +303,15 @@ and their subdivisions. Also released as AS/NZS 2632.2:1999
 =head1 SEE ALSO
 
 AddressParse is designed to identify properties, which have a unique physical 
-location. Geo::StreetAddress::US will also parse addresses for the USA, and can handle
+location. L<Geo::StreetAddress::US> will also parse addresses for the USA, and can handle
 locations defined by street intersections, such as: "Hollywood & Vine, Los Angeles, CA" 
 "Mission Street at Valencia Street, San Francisco, CA"
 
 
-Lingua::EN::NameParse, Parse::RecDescent, Locale::SubCountry, Geo::StreetAddress::US
+    L<Lingua::EN::NameParse>
+    L<Geo::StreetAddress::US>
+    L<Parse::RecDescent>
+    L<Locale::SubCountry>
 
 See L<http://www.upu.int/post_code/en/postal_addressing_systems_member_countries.shtml>
 for a list of different addressing formats from around the world. And also
@@ -307,17 +324,18 @@ to specify a new module with its own grammar, and inherit all the existing
 methods. I don't have the knowledge of the naming conventions for non-english
 languages.
 
-
-=head1 COPYRIGHT
-
-Copyright (c) 1999-2005 Kim Ryan. All rights reserved.
-This program is free software; you can redistribute it
-and/or modify it under the terms of the Perl Artistic License
-(see L<http://www.perl.com/perl/misc/Artistic.html> ).
-
 =head1 AUTHOR
 
-AddressParse was written by Kim Ryan <<kimryan at cpan d o t org>
+AddressParse was written by Kim Ryan <kimryan at cpan d o t org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (c) 2005 Kim Ryan. All rights reserved.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.4 or,
+at your option, any later version of Perl 5 you may have available.
+
 
 =cut
 
@@ -325,20 +343,12 @@ AddressParse was written by Kim Ryan <<kimryan at cpan d o t org>
 
 package Lingua::EN::AddressParse;
 
-use 5.004;
+use strict;
 use Lingua::EN::AddressGrammar;
 use Lingua::EN::NameParse;
 use Parse::RecDescent;
 
-use strict;
-
-use Exporter;
-use vars qw (@ISA $VERSION);
-
-$VERSION   = '1.13';
-@ISA       = qw(Exporter);
-
-
+our $VERSION = '1.14';
 
 #------------------------------------------------------------------------------
 # Create a new instance of an address parsing object. This step is time
@@ -352,13 +362,13 @@ sub new
     my $address = {};
     bless($address,$class);
 
-    # ADD ERROR CHECKING FOR INVALID KEYS
+    # Add error checking for invalid keys?
     foreach my $curr_key (keys %args)
     {
         $address->{$curr_key} = $args{$curr_key};
     }
 
-    my $grammar = &Lingua::EN::AddressGrammar::create($address);
+    my $grammar = &Lingua::EN::AddressGrammar::_create($address);
 
     $address->{parse} = new Parse::RecDescent($grammar);
 
@@ -487,6 +497,42 @@ sub properties
     my $address = shift;
     return(%{ $address->{properties} });
 }
+
+#------------------------------------------------------------------------------
+# Create a text report to standard output listing 
+# - the input string, 
+# - the name of each defined component 
+# - any non matching component
+
+sub report
+{
+    my $address = shift;
+
+    my $report;
+
+    $report .= sprintf("%-23.23s : %s\n","Input",$address->{input_string});
+    my %comps = $address->case_components;
+    foreach my $comp ( sort keys %comps)
+    {
+        if ($comps{$comp}  )
+        {
+            $report .= sprintf("%-23.23s : %s\n",$comp,$comps{$comp});
+        }
+    }
+    my %props = $address->properties;
+    if ( $props{type} )
+    {
+        $report .= sprintf("%-23.23s : %s\n","Address type",$props{type});
+    }
+
+    if ( $props{non_matching} )
+    {
+        $report .= sprintf("%-23.23s : %s\n","Parsing Error","Yes");
+        $report .= sprintf("%-23.23s : >>>%s<<<\n","Non matching part",$props{non_matching});
+    }
+    return($report);
+}
+
 #------------------------------------------------------------------------------
 
 # PRIVATE METHODS
@@ -647,32 +693,33 @@ sub _validate
     }
 }
 #-------------------------------------------------------------------------------
-# Purge  the input string of illegal or redundant characters 
+# Purge  the input string of illegal or redundant characters. Note that quotes 
+# can occur as property name delimiters
 
 sub _clean
 {
-   my ($input_string) = @_;
+    my ($input_string) = @_;
 
-   # remove illegal characters
-   $input_string =~ s/[^A-Za-z0-9\-\'\.&\/# ]//go;
+    # remove illegal characters
+    $input_string =~ s/[^A-Za-z0-9&\/#.'" -]//go;
 
-   # remove repeating spaces
-   $input_string =~ s/  +/ /go ;
+    # remove repeating spaces
+    $input_string =~ s/  +/ /go ;
 
-   # remove any remaining leading or trailing space
-   $input_string =~ s/^ //;
-   $input_string =~ s/ $//;
+    # remove any remaining leading or trailing space
+    $input_string =~ s/^ //;
+    $input_string =~ s/ $//;
 
-   return($input_string);
+    return($input_string);
 }
 #------------------------------------------------------------------------------
 # Remove any trailing spaces
 
 sub _trim_space
 {
-   my ($string) = @_;
-   $string =~ s/ $//;
-   return($string);
+    my ($string) = @_;
+    $string =~ s/ $//;
+    return($string);
 }
 
 

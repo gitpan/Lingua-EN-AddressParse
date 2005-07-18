@@ -1,5 +1,11 @@
 Revision history for Perl CPAN module Lingua::EN::AddressParse
 
+1.14 18 Jul 2005
+    Fixed auto_clean option so that quotes are retained, needed for rural property names
+    Added report method to dump address properties and components
+    Updated distribution to current CPAN requirements 
+
+
 1.13 22 Jun 2005
 
     Added US style sub properties, such as 123 Main St Suite # 12 Somewhere CA 92345 
@@ -9,7 +15,7 @@ Revision history for Perl CPAN module Lingua::EN::AddressParse
     optionally street name and type, then suburb and post code.
 
     Sub property values are now returned as as separate component sub_property_identifier, 
-    not as part of the property_identifier component
+      not as part of the property_identifier component
 
     Created a better grammar for property_identifier
     Removed incorrect validity tests that were not accounting for ordinal street types
