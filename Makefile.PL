@@ -14,5 +14,6 @@ WriteMakefile
         'Parse::RecDescent' => 0,
         'Locale::SubCountry' => 0,
         'Lingua::EN::NameParse' => 0 
-    }                            
+    },
+    'LICENSE'     => 'perl'                                
 );

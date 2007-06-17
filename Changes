@@ -1,5 +1,17 @@
 Revision history for Perl CPAN module Lingua::EN::AddressParse
 
+1.15 17 Jun 2007
+    Added sample pre parser for correcting common errors
+    Added more street types
+    Added more street nouns
+    Added more sub property types
+    Allowed for optional street number, name and type in rural addresses
+    Allowed for up to 5 numbers in property identifier
+    Allowed for street names with up to three words, such as 'Tin Can Bay Road'
+    Allowed for sub building patterns such as 'Level 6 Tower A 123 Main St'
+    Thanks to Kieren Diment for test cases
+
+
 1.14 18 Jul 2005
     Fixed auto_clean option so that quotes are retained, needed for rural property names
     Added report method to dump address properties and components

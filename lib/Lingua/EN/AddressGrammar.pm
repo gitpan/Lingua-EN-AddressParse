@@ -22,7 +22,7 @@ AddressGrammar was written by Kim Ryan, kimryan at cpan d-o-t or g
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005 Kim Ryan. All rights reserved.
+Copyright (c) 2007 Kim Ryan. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.4 or,
@@ -136,29 +136,62 @@ q{
 };
 
 #-------------------------------------------------------------------------------
-
 my $rural_address_rule = 
 q{
+    property_name property_identifier street street_type suburb subcountry post_code country(?) non_matching(?)
+    {
+        $return =
+        {
+           property_name       => $item[1],
+           property_identifier => $item[2],
+           street              => $item[3],
+           street_type         => $item[4],           
+           suburb              => $item[5],
+           subcountry          => $item[6],
+           post_code           => $item[7],
+           country             => $item[8][0],
+           non_matching        => $item[9][0],
+           type                => 'rural'
+        }
+    }
+    |
+    property_name street street_type suburb subcountry post_code country(?) non_matching(?)
+    {
+        $return =
+        {
+           property_name       => $item[1],
+           street              => $item[2],
+           street_type         => $item[3],           
+           suburb              => $item[4],
+           subcountry          => $item[5],
+           post_code           => $item[6],
+           country             => $item[7][0],
+           non_matching        => $item[8][0],
+           type                => 'rural'
+        }
+    }
+    |
     property_name suburb subcountry post_code country(?) non_matching(?)
     {
         $return =
         {
-           property_name => $item[1],
-           suburb        => $item[2],
-           subcountry    => $item[3],
-           post_code     => $item[4],
-           country       => $item[5][0],
-           non_matching  => $item[6][0],
-           type          => 'rural'
+           property_name       => $item[1],
+           suburb              => $item[2],
+           subcountry          => $item[3],
+           post_code           => $item[4],
+           country             => $item[5][0],
+           non_matching        => $item[6][0],
+           type                => 'rural'
         }
     }
-    |
+    |     
 };
 #-------------------------------------------------------------------------------
 
 my $post_box_rule = 
 q{
     post_box suburb subcountry post_code country(?) non_matching(?)
+    # post_box postal_region subcountry post_code country(?) non_matching(?)    
     {
         $return =
         {
@@ -229,27 +262,37 @@ q{
 
 my $sub_property_identifier =
 q{
-    # Unit 34, BLDG 12, SUITE A, 
 
-    sub_property_identifier : 
-
-    sub_property_name sub_property_number
-    { 
-       $return = "$item[1]$item[2]"
-    } 
-
+    # Level 4 Tower A, Unit 3A Block C
+    sub_property_identifier :
+        /Level (\d+|[GM]) (Building|Tower) \d+[A-Z]? /i |
+        /Level (\d+|[GM]) (Building|Tower) [A-Z] /i |        
+        /Unit \d+[A-Z]? (Block|Bldg|Building|Tower) ([A-Z]|\d+) /i
+        
+        |
+        
+        sub_property_name sub_property_number
+        { 
+           $return = "$item[1]$item[2]"
+        }
+       
+    # Unit 34, BLDG 12, SUITE A,
+    
     sub_property_name: 
-        /Apartment /i  |
-        /Building /i   | 
-        /Bldg /i       | 
-        /Department /i | 
+        /Apartment /i  | /Apt /i   |
+        /Bay /i        |
+        /Building /i   | /Bldg /i  | 
+        /Department /i |
+        /Factory /i    |
         /Flat /i       |
+        /Gate /i       |
         /Unit /i       |
         /Level /i      |
         /Lot /i        |
         /No\.? ?/i     |
         /Rear (Of )?/i |
-        /Room /i       | # for USA
+        /Room /i       |
+        /Shed /i       |
         /Shop /i       |
         /Suite /i      | 
         /Villa /i      
@@ -273,21 +316,20 @@ q{
        $return = "$item[1]$item[2]"
     } 
 
-
     sub_property_name: 
-        /Apartment /i  |
-        /Apt /i        | 
-        /Building /i   | 
-        /Bldg /i       | 
+        /Apartment /i  | /Apt /i   |
+        /Bay /i        |
+        /Building /i   | /Bldg /i  | 
         /Department /i | 
-        /Dept /i       | 
+        /Dept /i       |
+        /Factory /i    |        
         /Floor /i      |
         /Fl /i         | 
         /Front /i      |
         /Frnt /i       |
+        /Gate /i       |
         /Key /i        |
-        /Hangar /i     |
-        /Hngr /i       |
+        /Hangar /i     | /Hngr /i  |
         /Key /i        |
         /Lobby /i      |
         /Lbby /i       |
@@ -305,7 +347,8 @@ q{
         /Suite /i      | 
         /Ste /i        | 
         /Trailer /i    | 
-        /Trlr /i       | 
+        /Trlr /i       |
+        /Villa /i      |
         /Unit /i        
 
     sub_property_number :  
@@ -320,10 +363,10 @@ my $property_identifier =
 q{
     property_identifier :  
 
-        /\d{1,3}[A-Z]?[\/ ]\d{1,4}-\d{1,4} / |  # 12/42-44, 12 42-44
-        /\d{1,3}[A-Z]?[\/ ]\d{1,4}[A-Z]? /   |  # 12A/42, 12 42A
-        /\d{1,4}-\d{1,4} /                   |  # 1002-1006
-        /\d{1,4}[A-Z]? /                        # 1002A
+        /\d{1,3}[A-Z]?[\/ ]\d{1,5}-\d{1,5} / |  # 12/42-44, 12 42-44
+        /\d{1,3}[A-Z]?[\/ ]\d{1,5}[A-Z]? /   |  # 12A/42, 12 42A
+        /\d{1,5}-\d{1,5} /                   |  # 1002-1006
+        /\d{1,5}[A-Z]? /                        # 10025A
 };
 
 #------------------------------------------------------------------------------
@@ -378,10 +421,35 @@ q{
 
 #------------------------------------------------------------------------------
 
+my $postal_region =
+q{
+    # PO Box addresses can have a box descritpor after the suburb, such as
+    # PO Box 123 Victoria Park Private Boxes
+
+    postal_region : po_suburb  po_description(?)
+    {
+        if ( $item[0] and $item[1][0] )
+        {
+            $return = "$item[0]$item[1][0]"
+        }
+        else
+        {
+           $return = $item[0]
+        }
+    }
+    # 1-3 words ...!po_description
+    po_suburb :
+    
+    po_description :
+        /Private Boxes /i |
+        /Delivery Centre /i
+    
+};
+
+#------------------------------------------------------------------------------
+
 my $street =
 q{
-
-
    # allow for case where street type IS the street name, as in The PARADE
 
    street_noun: 
@@ -390,7 +458,9 @@ q{
       nouns:    
          /Arcade /i       |
          /Avenue /i       |
+         /Battlement /i   |
          /Boulevarde? /i  |
+         /Broadwater /i   |
          /Broadway /i     |
          /Cascades /i     |
          /Carriageway /i  |
@@ -400,9 +470,14 @@ q{
          /Circle /i       |
          /Circuit /i      |
          /Close /i        |
+         /Concord /i      |
+         /Corniche /i     |
+         /Coronado /i     |
          /Corso /i        |
          /Crest /i        |
+         /Crossover /i    |         
          /Crescent /i     |
+         /Dell /i         |
          /Deviation /i    |
          /Driftway /i     |
          /Entrance /i     |
@@ -416,11 +491,20 @@ q{
          /Haven /i        |
          /Kingsway /i     |
          /Knoll /i        |
+         /Lanterns /i     |
          /Mall /i         |
+         /Mainbrace /i    |
+         /Mainsail /i     |
+         /Overflow /i     |         
+         /Oval /i         |
          /Parade /i       |
+         /Portico /i      |
          /Parkway /i      |
+         /Peninsula /i    |         
          /Plaza /i        |
          /Promenade /i    |
+         /Rampart /i      |
+         /Retreat /i      |
          /Ridge /i        |
          /Row /i          |
          /Serpentine /i   |
@@ -485,7 +569,7 @@ q{
         # Allow for street_type that can also occur as a street name
         # so we have to handle these exceptions, eg Park Lane
         
-        /(Brae|Close|Crescent|Esplanade|Glen|Grove|Lane|Park|Ridge|Terrace) /i ...street_type
+        /(Arcade|Avenue|Brae|Close|Crescent|Esplanade|Glen|Grove|Lane|Loop|Park|Place|Ridge|Terrace) /i ...street_type
         { 
             $return = $item[1]
         }
@@ -512,10 +596,14 @@ q{
         |
         street_name_letter
         
-    # South Head (Road) etc
-    street_name_words : street_name_word(1..2)
+    # Tin Can Bay (Road), South Head (Road) etc
+    street_name_words : street_name_word(1..3)
     {
-        if ( $item[1][0] and $item[1][1] )
+        if ( $item[1][0] and $item[1][1] and $item[1][2] )
+        {
+           $return = "$item[1][0]$item[1][1]$item[1][2]"
+        }
+        elsif ( $item[1][0] and $item[1][1] )
         {
            $return = "$item[1][0]$item[1][1]"
         }
@@ -551,39 +639,49 @@ q{
     street_type:
 
          # Place most common types first to improve the speed of matching
-         /St\.? /i    | /Street /i   |
-         /Rd\.? /i    | /Road /i     |
-         /La\.? /i    | /Lane /i     |
-         /Ave?\.? /i  | /Avenue /i   |
-
+         /St\.? /i    | /Street /i       |
+         /Rd\.? /i    | /Road /i         |
+         /La\.? /i    | /Lane /i         |
+         /Ave?\.? /i  | /Avenue /i       |
          /Al\.? /i    | /Alley /i        |
          /Arc\.? /i   | /Arcade /i       |
-         /Bvd\.? /i   | /Boulevarde? /i  |
+         /Bvd\.? /i   | /Blvd?\.? /i     | /Boulevarde? /i  |
          /Bnd\.? /i   | /Bend /i         |
          /Bl\.? /i    | /Bowl /i         |
          /Br\.? /i    | /Brae /i         |
-         /Cir\.? /i   | /Circle /i       |
-         /Cct\.? /i   | /Circuit /i      |
+         /Cir\.? /i   | /Circle /i       | /Crcle /i   |
+         /Cct\.? /i   | /Crt\.? /i       | /Circuit /i |
          /Cl\.? /i    | /Close /i        |
          /Ct\.? /i    | /Court /i        |
-         /Cres\.? /i  | /Cr\.? /i        | /Crescent /i |
-         /Dr\.? /i    | /Drive /i        |
+         /Cres\.? /i  | /Crs\.? /i       | /Cr\.? /i   | /Crescent /i |
+         /Crest /i    |
+         /Cove /i     |
+         /Dr\.? /i    | /Drv\.? /i       | /Drive /i   |
          /Esp\.? /i   | /Esplanade /i    |
          /Exp\.? /i   | /Expressway /i   |
          /Fw?y\.? /i  | /Freeway /i      |
          /Gln\.? /i   | /Glen /i         |
          /Gr\.? /i    | /Grove /i        |
          /Hwa?y\.? /i | /Highway /i      |
+         /Island /i   | /Is /i           |
+         /Loop /i     |
+         /Mall /i     |
+         /Mews /i     |
          /Pde\.? /i   | /Parade /i       |
          /Pk\.? /i    | /Park /i         |
+         /Parkway /i  | /Pkwy\.? /i      | 
          /Pl\.? /i    | /Place /i        |
          /Plz\.? /i   | /Plaza /i        |
+         /Ramble /i   |
          /Rdg\.? /i   | /Ridge /i        |
-         /Rdy\.? /i   | /Roadway /i      |
+         /Ride /i     | /Rde /i          |
+         /Rise /i     | /Rse /i          |
+         /Rdy\.? /i   | /Roadway /i      |         
          /Row /i      |
          /Sq\.? /i    | /Square /i       |
          /Tce\.? /i   | /Terrace /i      |
-         /Wk\.? /i    | /Walk /i         |
+         /Throughway /i  |
+         /Wl?k\.? /i  | /Walk /i         |
          /Wy\.? /i    | /Way /i
 
      street_direction:  
@@ -628,7 +726,6 @@ q
         }
         |
 
-        # query??? use 0..1
         # such as  Victoria Valley, Concord West
         word suburb_word(0..2)
         {
@@ -645,6 +742,9 @@ q
               $return = $item[1]
             }
         }
+        |
+        # such as Kippa-ring or Brighton-Le-Sands
+        /[A-Z]{2,}-[A-Z]{2,}(-[A-Z]{2,})?/i
  
     suburb_word: ...!subcountry word
 
@@ -757,6 +857,7 @@ sub _create
     $grammar .= $property_identifier;
     $grammar .= $property_name;
     $grammar .= $post_box;
+    # $grammar .= $postal_region;        
     $grammar .= $road_box;
     $grammar .= $street;
     $grammar .= $suburb;

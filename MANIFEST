@@ -2,7 +2,8 @@ MANIFEST
 README
 Changes
 Makefile.PL
-demo.pl
+examples/demo.pl
+examples/pre_parse.pl
 lib/Lingua/EN/AddressParse.pm
 lib/Lingua/EN/AddressGrammar.pm
 t/main.t

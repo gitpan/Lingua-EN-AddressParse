@@ -5,7 +5,6 @@
 use strict;
 use Lingua::EN::AddressParse;
 
-
 my %args =
 (
    country     => 'AU',
@@ -20,18 +19,18 @@ open(REPORT_FH,">report.txt") or die;
 
 open(ERROR_FH,">error.txt") or die;
 
-my $errors;
+my ($errors,$total);
 while ( <DATA> )
 {
     # last if $. == 3;
     chomp($_);
-    $address_in = $_;
+    my $address_in = $_;
 
     $total++;
     my $error = $address->parse($address_in);
 
-    %comps = $address->case_components;
-    %props = $address->properties;
+    my %comps = $address->case_components;
+    my %props = $address->properties;
 
     if ( $error and $props{type} eq 'unknown' )
     {
@@ -40,7 +39,7 @@ while ( <DATA> )
     }
     else
     {
-        $line = sprintf("%-8.8s : %-10.10s %-10.10s %-20.20s %-10.10s %-2.2s %-15.15s %-15.15s %-15.15s %-20.20s %-15.15s %-10.10s %-14.14s %-30.30s\n",
+        my $line = sprintf("%-8.8s : %-10.10s %-10.10s %-20.20s %-10.10s %-2.2s %-15.15s %-15.15s %-15.15s %-20.20s %-15.15s %-10.10s %-14.14s %-30.30s\n",
             $props{type},
             $comps{sub_property_identifier},$comps{property_identifier},
             $comps{street},$comps{street_type},$comps{street_direction},
@@ -49,7 +48,7 @@ while ( <DATA> )
         print(REPORT_FH $line);
    }
 }
-$now = localtime(time);
+my $now = localtime(time);
 
 print(REPORT_FH "\n\nTIME : $now \n");
 printf(REPORT_FH "BATCH DATA QUALITY: %5.2f percent\n",( 1- ($errors / $total)) *100 );
