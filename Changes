@@ -1,5 +1,9 @@
 Revision history for Perl CPAN module Lingua::EN::AddressParse
 
+1.16 17 Jun 2011
+    Moved AddressGrammar.pm to Lingua::EN::AddressParse::Grammar name space
+    Included tests for Canadian and UK addresses
+
 1.15 17 Jun 2007
     Added sample pre parser for correcting common errors
     Added more street types

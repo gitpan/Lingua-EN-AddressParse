@@ -81,8 +81,8 @@ the components that can make up an address.
     Post code     : 2062, 34532, SG12A 9ET
     Country       : Australia, UK, US or Canada
 
-Refer to the component grammar defined in the AddressGrammar module for a
-complete list of combinations.
+Refer to the component grammar defined in the Lingua::EN::AddressParse::Grammar
+module for a complete list of combinations.
 
 
 The following address formats are currently supported.
@@ -271,7 +271,7 @@ street type of null string.
 
 For US addresses, an ambiguity arises between a street directional suffix and 
 a suburb directional prefix, such as '12 Main St S Springfield CA 92345'. Is it South
-Main St, or South Springfield. The parser assumes that 'S' belongs to the street
+Main St, or South Springfield? The parser assumes that 'S' belongs to the street
 description.
 
 The huge number of character combinations that can form a valid address makes
@@ -330,11 +330,10 @@ AddressParse was written by Kim Ryan <kimryan at cpan d o t org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005 Kim Ryan. All rights reserved.
+Copyright (c) 2011 Kim Ryan. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.8.4 or,
-at your option, any later version of Perl 5 you may have available.
+it under the same terms as Perl itself.
 
 
 =cut
@@ -344,11 +343,12 @@ at your option, any later version of Perl 5 you may have available.
 package Lingua::EN::AddressParse;
 
 use strict;
-use Lingua::EN::AddressGrammar;
+use warnings;
+use Lingua::EN::AddressParse::Grammar;
 use Lingua::EN::NameParse;
 use Parse::RecDescent;
 
-our $VERSION = '1.15';
+our $VERSION = '1.16';
 
 #------------------------------------------------------------------------------
 # Create a new instance of an address parsing object. This step is time
@@ -368,7 +368,7 @@ sub new
         $address->{$curr_key} = $args{$curr_key};
     }
 
-    my $grammar = &Lingua::EN::AddressGrammar::_create($address);
+    my $grammar = &Lingua::EN::AddressParse::Grammar::_create($address);
 
     $address->{parse} = new Parse::RecDescent($grammar);
 
@@ -547,8 +547,9 @@ sub _assemble
 
     my $address = shift;
 
-    # Parse the address according to the rules defined in the AddressGrammar module,
-    # using Parse::RecDescent as the parsing engine
+    # Parse the address according to the rules defined in the AddressParse::Grammar module,
+    # $::RD_TRACE  = 1;  # for debugging RecDescent output
+    # Use Parse::RecDescent to do the parsing. 'full_address' is a label for the complete grammar tree
     my $parsed_address = $address->{parse}->full_address($address->{input_string});
 
     # Place components into a separate hash, so they can be easily returned to

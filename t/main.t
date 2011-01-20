@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------
 
 use strict;
-use Test::Simple tests => 6;
+use Test::Simple tests => 8;
 use Lingua::EN::AddressParse;
 
 
@@ -120,6 +120,7 @@ $address = new Lingua::EN::AddressParse(%args);
 $input = "12 AMINTA CRESCENT BEVERLEY HILLS BRITISH COLUMBIA K1B 4L7";
 $address->parse($input);
 %comps = $address->case_components;
+ok
 (
     (
         $comps{property_identifier} eq '12' and
@@ -142,6 +143,7 @@ $address->parse($input);
 %comps = $address->case_components;
 
 %comps = $address->case_components;
+ok
 (
     (
         $comps{property_identifier} eq '12' and

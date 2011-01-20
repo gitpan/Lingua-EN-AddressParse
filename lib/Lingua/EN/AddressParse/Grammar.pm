@@ -1,6 +1,6 @@
 =head1 NAME
 
-Lingua::EN::AddressGrammar - grammar tree for Lingua::EN::AddressParse
+Lingua::EN::AddressParse::Grammar - grammar tree for Lingua::EN::AddressParse
 
 =head1 SYNOPSIS
 
@@ -22,18 +22,20 @@ AddressGrammar was written by Kim Ryan, kimryan at cpan d-o-t or g
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2007 Kim Ryan. All rights reserved.
+Copyright (c) 2011 Kim Ryan. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.8.4 or,
-at your option, any later version of Perl 5 you may have available.
+it under the same terms as Perl itself.
 
 =cut
 #-------------------------------------------------------------------------------
 
-package Lingua::EN::AddressGrammar;
+package Lingua::EN::AddressParse::Grammar;
 use strict;
+use warnings;
 use Locale::SubCountry;
+
+our $VERSION = '1.16';
 
 #-------------------------------------------------------------------------------
 # Rules that define valid orderings of an addresses components

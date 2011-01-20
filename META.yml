@@ -1,16 +1,24 @@
 --- #YAML:1.0
-name:                Lingua-EN-AddressParse
-version:             1.15
-abstract:            Extract components of mailing addresses
-license:             perl
-generated_by:        ExtUtils::MakeMaker version 6.32
-distribution_type:   module
-requires:     
-    Lingua::EN::NameParse:         0
-    Locale::SubCountry:            0
-    Parse::RecDescent:             0
-meta-spec:
-    url:     http://module-build.sourceforge.net/META-spec-v1.2.html
-    version: 1.2
+name:               Lingua-EN-AddressParse
+version:            1.16
+abstract:           Extract components of mailing addresses
 author:
     - Kim Ryan
+license:            perl
+distribution_type:  module
+configure_requires:
+    ExtUtils::MakeMaker:  0
+build_requires:
+    ExtUtils::MakeMaker:  0
+requires:
+    Lingua::EN::NameParse:  0
+    Locale::SubCountry:   0
+    Parse::RecDescent:    0
+no_index:
+    directory:
+        - t
+        - inc
+generated_by:       ExtUtils::MakeMaker version 6.56
+meta-spec:
+    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
+    version:  1.4
