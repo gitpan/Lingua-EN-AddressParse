@@ -1,24 +1,35 @@
---- #YAML:1.0
-name:               Lingua-EN-AddressParse
-version:            1.16
-abstract:           Extract components of mailing addresses
+---
+abstract: 'Extract components from free form mailing address text'
 author:
-    - Kim Ryan
-license:            perl
-distribution_type:  module
-configure_requires:
-    ExtUtils::MakeMaker:  0
+  - 'Kim Ryan <kimryan at cpan org>'
 build_requires:
-    ExtUtils::MakeMaker:  0
-requires:
-    Lingua::EN::NameParse:  0
-    Locale::SubCountry:   0
-    Parse::RecDescent:    0
-no_index:
-    directory:
-        - t
-        - inc
-generated_by:       ExtUtils::MakeMaker version 6.56
+  Test::More: 0.94
+  Test::Pod: 1.04
+configure_requires:
+  Module::Build: 0.38
+dynamic_config: 1
+generated_by: 'Module::Build version 0.4003, CPAN::Meta::Converter version 2.120921'
+license: perl
 meta-spec:
-    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
-    version:  1.4
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Lingua-EN-AddressParse
+provides:
+  Lingua::EN::AddressParse:
+    file: lib/Lingua/EN/AddressParse.pm
+    version: 1.17
+  Lingua::EN::AddressParse::Grammar:
+    file: lib/Lingua/EN/AddressParse/Grammar.pm
+    version: 1.17
+requires:
+  Lingua::EN::NameParse: 1.24
+  Locale::SubCountry: 1.41
+  Parse::RecDescent: 1
+  Test::Pod::Coverage: 1.04
+  locale: 1
+  strict: 1.04
+  utf8: 1.09
+  warnings: 1.12
+resources:
+  license: http://dev.perl.org/licenses/
+version: 1.17

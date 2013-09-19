@@ -7,13 +7,16 @@ WriteMakefile
 (
     'NAME'         => 'Lingua::EN::AddressParse',
     'VERSION_FROM' => 'lib/Lingua/EN/AddressParse.pm',
-    'ABSTRACT'     => 'Extract components of mailing addresses',
+    'ABSTRACT'     => 'Extract components from free form mailing address text',
     'AUTHOR'       => 'Kim Ryan',
-    'PREREQ_PM'    =>  
+    'PREREQ_PM'    =>
     {
-        'Parse::RecDescent' => 0,
-        'Locale::SubCountry' => 0,
-        'Lingua::EN::NameParse' => 0 
+	'Test::Pod::Coverage' => 1.04,
+	'utf8'                => 1.09,
+	'warnings'            => 1.12,
+        'Parse::RecDescent'   => 1.00,
+        'Locale::SubCountry'  => 1.41,
+        'Lingua::EN::NameParse' => 1.24
     },
-    'LICENSE'     => 'perl'                                
+    'LICENSE'     => 'perl'
 );

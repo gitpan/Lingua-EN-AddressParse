@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------
 
 use strict;
-use Test::Simple tests => 8;
+use Test::Simple tests => 11;
 use Lingua::EN::AddressParse;
 
 
@@ -35,7 +35,7 @@ ok
         $comps{post_code} eq '2761' and
         $comps{country} eq 'AUSTRALIA'
     ),
-    "Australian suburban address 1"
+    "Australian suburban address with sub property"
 );
 
 $input = "Unit 4 12 Queen's Park Road Queens Park NSW 2022 ";
@@ -52,8 +52,39 @@ ok
         $comps{subcountry} eq 'NSW' and
         $comps{post_code} eq '2022'
     ),
-    "Australian suburban address 2"
+    "Australian suburban address with two word street"
 );
+
+$input = "12 The Avenue Parkes NSW 2522 ";
+$address->parse($input);
+%comps = $address->case_components;
+ok
+(
+    (
+        $comps{property_identifier} eq '12' and
+        $comps{street} eq "The Avenue" and
+        $comps{suburb} eq 'Parkes' and
+        $comps{subcountry} eq 'NSW' and
+        $comps{post_code} eq '2522'
+    ),
+    "Suburban address with street noun"
+);
+
+$input = "12 Broadway Parkes NSW 2522";
+$address->parse($input);
+%comps = $address->case_components;
+ok
+(
+    (
+        $comps{property_identifier} eq '12' and
+        $comps{street} eq "Broadway" and
+        $comps{suburb} eq 'Parkes' and
+        $comps{subcountry} eq 'NSW' and
+        $comps{post_code} eq '2522'
+    ),
+    "Suburban address with single word street"
+);
+
 
 $input = '"OLD REGRET" WENTWORTH FALLS NSW 2780';
 $address->parse($input);
@@ -112,6 +143,21 @@ ok
     "US suburban address"
 );
 
+$input = "12 US HIGHWAY 19 N BEVERLEY HILLS CA 90210-1234";
+$address->parse($input);
+%comps = $address->case_components;
+ok
+(
+    (
+        $comps{property_identifier} eq '12' and
+        $comps{street} eq 'US Highway 19 N' and
+        $comps{suburb} eq 'Beverley Hills' and
+        $comps{subcountry} eq 'CA' and
+        $comps{post_code} eq '90210-1234'
+    ),
+    "US government road address"
+);
+
 
 %args = ( country => 'Canada' );
 
@@ -155,6 +201,3 @@ ok
     ),
     "UK suburban address"
 );
-
-
-
