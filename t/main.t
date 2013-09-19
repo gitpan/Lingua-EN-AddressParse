@@ -125,14 +125,14 @@ ok($props{non_matching} eq ": ALL POSTAL DELIVERIES", "Australian Non matching")
 %args = ( country  => 'US');
 $address = new Lingua::EN::AddressParse(%args);
 
-$input = "12 AMINTA CRESCENT S APT # 12 BEVERLEY HILLS CA 90210-1234";
+$input = "12 AMINTA CRESCENT S # 24E BEVERLEY HILLS CA 90210-1234";
 $address->parse($input);
 %comps = $address->case_components;
 ok
 (
     (
         $comps{property_identifier} eq '12' and
-        $comps{sub_property_identifier} eq 'Apt # 12' and
+        $comps{sub_property_identifier} eq '# 24E' and
         $comps{street} eq 'Aminta' and
         $comps{street_type } eq 'Crescent' and
         $comps{street_direction } eq 'S' and

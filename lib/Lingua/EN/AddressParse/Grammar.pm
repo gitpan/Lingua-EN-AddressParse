@@ -35,7 +35,7 @@ use strict;
 use warnings;
 use Locale::SubCountry;
 
-our $VERSION = '1.17';
+our $VERSION = '1.18';
 
 #-------------------------------------------------------------------------------
 # Rules that define valid orderings of an addresses components

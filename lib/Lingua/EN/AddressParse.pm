@@ -354,7 +354,7 @@ use Lingua::EN::AddressParse::Grammar;
 use Lingua::EN::NameParse;
 use Parse::RecDescent;
 
-our $VERSION = '1.17';
+our $VERSION = '1.18';
 
 #------------------------------------------------------------------------------
 # Create a new instance of an address parsing object. This step is time

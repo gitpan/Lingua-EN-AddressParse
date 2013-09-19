@@ -1,5 +1,8 @@
 Revision history for Perl CPAN module Lingua::EN::AddressParse
 
+1.18 19 Sep 2013
+    Fixed test for US suburban address in main.t
+
 1.17 18 Sep 2013
     Added Build.PL
     Expanded test coverage to more address formats
