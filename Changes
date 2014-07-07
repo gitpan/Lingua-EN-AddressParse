@@ -1,5 +1,18 @@
 Revision history for Perl CPAN module Lingua::EN::AddressParse
 
+1.19 7 Jul 2014
+    auto_clean always cleans string, not just on parsing error
+    during auto_clean, spaces now removed in sub property identifer, such as 1 A Main St -> 1A Main St
+    fixed floor description in sub property identifier
+    added street type such as 'John F Kennedy Boulevard'
+    post codes can now be optional with the force_post_code argument
+    added more 3 word street names
+    added more street types
+    many more auto_clean functions for redundant, missing or malformed characters
+    stopped single letter streets returning 'no vowel sound' error
+    added more tests
+
+
 1.18 19 Sep 2013
     Fixed test for US suburban address in main.t
 

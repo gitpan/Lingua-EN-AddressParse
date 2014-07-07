@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------
 
 use strict;
-use Test::Simple tests => 11;
+use Test::Simple tests => 14;
 use Lingua::EN::AddressParse;
 
 
@@ -22,6 +22,8 @@ my $address = new Lingua::EN::AddressParse(%args);
 
 $input = "12A/74-76 OLD AMINTA CRESCENT HASALL GROVE NEW SOUTH WALES 2761 AUSTRALIA";
 $address->parse($input);
+my %props = $address->properties;
+
 my %comps = $address->case_components;
 
 ok
@@ -33,7 +35,8 @@ ok
         $comps{suburb} eq 'Hasall Grove' and
         $comps{subcountry} eq 'NSW' and
         $comps{post_code} eq '2761' and
-        $comps{country} eq 'AUSTRALIA'
+        $comps{country} eq 'AUSTRALIA' and
+        $props{type}  eq 'suburban'
     ),
     "Australian suburban address with sub property"
 );
@@ -117,8 +120,8 @@ ok
 
 $input = "12 SMITH ST ULTIMO NSW 2007 : ALL POSTAL DELIVERIES";
 $address->parse($input);
-my %props = $address->properties;
-ok($props{non_matching} eq ": ALL POSTAL DELIVERIES", "Australian Non matching");
+%props = $address->properties;
+ok($props{non_matching} eq ": ALL POSTAL DELIVERIES ", "Australian Non matching");
 
 # Test other countries
 
@@ -180,9 +183,28 @@ ok
 );
 
 
-%args = ( country  => 'United Kingdom');
-
+%args = ( country  => 'United Kingdom',  auto_clean  => 1);
+# note pre cursor only detected if auto_clean is on
 $address = new Lingua::EN::AddressParse(%args);
+
+$input = "C/O MR A B SMITH XYZ P/L: 12 AMINTA CRESCENT NEWPORT IOW SW1A 9ET";
+$address->parse($input);
+%comps = $address->case_components;
+
+%comps = $address->case_components;
+ok
+(
+    (
+        $comps{pre_cursor} eq 'C/O Mr A B Smith Xyz P/L:' and
+        $comps{property_identifier} eq '12' and
+        $comps{street} eq 'Aminta' and
+        $comps{street_type} eq 'Crescent' and
+        $comps{suburb} eq 'Newport' and
+        $comps{subcountry} eq 'IOW' and
+        $comps{post_code} eq 'SW1A 9ET'
+    ),
+    "UK suburban address with pre cursor"
+);
 
 $input = "12 AMINTA CRESCENT NEWPORT IOW SW1A 9ET";
 $address->parse($input);
@@ -200,4 +222,33 @@ ok
         $comps{post_code} eq 'SW1A 9ET'
     ),
     "UK suburban address"
+);
+
+
+$input = "12 ZTL CRESCENT NEWPORT IOW SW1A 9ET";
+$address->parse($input);
+ok
+(
+    (
+        $address->{error_desc} eq ':no vowel sound in street'
+    ),
+    "no vowel sound in street"
+);
+
+$input = "12 A 24 AMINTA CRESCENT NEWPORT IOW SW1A 9ET";
+$address->parse($input);
+%comps = $address->case_components;
+
+%comps = $address->case_components;
+ok
+(
+    (
+        $comps{property_identifier} eq '12A 24' and
+        $comps{street} eq 'Aminta' and
+        $comps{street_type} eq 'Crescent' and
+        $comps{suburb} eq 'Newport' and
+        $comps{subcountry} eq 'IOW' and
+        $comps{post_code} eq 'SW1A 9ET'
+    ),
+    "sub property auto clean"
 );

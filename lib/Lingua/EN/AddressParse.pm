@@ -12,7 +12,8 @@ Lingua::EN::AddressParse - manipulate geographical addresses
       auto_clean  => 1,
       force_case  => 1,
       abbreviate_subcountry => 0,
-      abbreviated_subcountry_only => 1
+      abbreviated_subcountry_only => 1,
+      force_post_code => 0
     );
 
     my $address = new Lingua::EN::AddressParse(%args);
@@ -46,7 +47,12 @@ text such as,
     "OLD REGRET" WENTWORTH FALLS NSW 2782 AUSTRALIA
     GPO Box K318, HAYMARKET, NSW 2000
 
+    3080 28TH AVE N ST PETERSBURG, FL 33713-3810
     12 1st Avenue N Suite # 2 Somewhere CA 12345 USA
+    C/O JOHN, KENNETH JR POA 744 WIND RIVER DR SYLVANIA, OH 43560-4317
+
+    9 Church Street, Abertillery, Mid Glamorgan NP13 1DA
+    27 Bury Street, Abingdon, Oxfordshire OX14 3QT
 
 and attempts to parse it. If successful, the address is broken
 down into it's components and useful functions can be performed such as :
@@ -68,18 +74,20 @@ lists of postal addresses.
 The following terms are used by AddressParse to define
 the components that can make up an address.
 
+    Pre cursor : C/O MR A Smith...
+
     Sub property identifier : Level 1A Unit 2, Apartment B, Lot 12, Suite # 12 ...
     Property Identifier : 12/66A, 24-34, 2A, 23B/12C, 12/42-44
 
-    Property name : "Old Regret"
-    Post Box      : GP0 Box K123, LPO 2345, RMS 23 ...
-    Road Box      : RMB 24A, RMS 234 ...
-    Street name   : O'Hare, New South Head, The Causeway
-    Street type   : Road, Rd., St, Lane, Highway, Crescent, Circuit ...
-    Suburb        : Dee Why, St. John's Wood ...
-    Sub country   : NSW, New South Wales, ACT, NY, AZ ...
-    Post code     : 2062, 34532, SG12A 9ET
-    Country       : Australia, UK, US or Canada
+    Property name   : "Old Regret"
+    Post Box        : GP0 Box K123, LPO 2345, RMS 23 ...
+    Road Box        : RMB 24A, RMS 234 ...
+    Street name     : O'Hare, New South Head, The Causeway
+    Street type     : Road, Rd., St, Lane, Highway, Crescent, Circuit ...
+    Suburb          : Dee Why, St. John's Wood ...
+    Sub country     : NSW, New South Wales, ACT, NY, AZ ...
+    Post (zip) code : 2062, 34532, SG12A 9ET
+    Country         : Australia, UK, US or Canada
 
 Refer to the component grammar defined in the Lingua::EN::AddressParse::Grammar
 module for a complete list of combinations.
@@ -87,14 +95,16 @@ module for a complete list of combinations.
 
 The following address formats are currently supported. A ? means the component is optional:
 
-    'suburban' : sub_property_identifier(?) property_identifier(?) street street_type suburb subcountry post_code country(?)
+    'suburban' : sub_property_identifier(?) property_identifier(?) street street_type suburb subcountry post_code(?)country(?)
     OR for the USA
-    'suburban' : property_identifier(?) street street_type sub_property_identifier(?) suburb subcountry post_code country(?)
+    'suburban' : property_identifier(?) street street_type sub_property_identifier(?) suburb subcountry post_code(?) country(?)
 
-    'rural'    : property_name suburb subcountry post_code country(?)
-    'post_box' : post_box suburb subcountry post_code country(?)
-    'road_box' : road_box street street_type suburb subcountry post_code country(?)
-    'road_box' : road_box suburb subcountry post_code country(?)
+    'rural'    : property_name suburb subcountry post_code(?) country(?)
+    'post_box' : post_box suburb subcountry post_code(?) country(?)
+    'road_box' : road_box street street_type suburb subcountry post_code(?) country(?)
+    'road_box' : road_box suburb subcountry post_code(?) country(?)
+
+All formats may contain a precursor
 
 See Lingua::EN::AddressParse::Grammar for a complete list
 
@@ -117,7 +127,8 @@ optional argument to the C<new> method.
       auto_clean  => 1,
       force_case  => 1,
       abbreviate_subcountry => 1,
-      abbreviated_subcountry_only => 1
+      abbreviated_subcountry_only => 1,
+      force_post_code => 1
     );
 
     my $address = new Lingua::EN::AddressParse(%args);
@@ -141,19 +152,20 @@ country name is supplied that the module doesn't recognise, it will die.
 
 =item force_case (optional)
 
-This option only applies to the e C<case_all> method, see below.
+This option only applies to the C<case_all> method, see below.
 
 =item auto_clean  (optional)
 
-When this option is set to a positive value, any call to the C<parse> method
-that fails will attempt to 'clean' the address and then reparse it. The type of
-cleaning includes
+When this option is set to a positive value, the input string is
+'cleaned' to try and normalise bad patterns. The type of cleaning
+includes
 
     remove non alphanumeric characters.
-    remove rededuant white space
+    remove redundant white space
+    add missing space seperators
     expand abbreviations to more common form
     remove bracketed annnotations
-    fix badly formed sub property indetifiers
+    fix badly formed sub property identifiers
 
 =item abbreviate_subcountry (optional)
 
@@ -167,6 +179,14 @@ When this option is set to a positive value, only the abbreviated form
 of sub country is allowed, such as "NSW" and not "New South Wales". This
 will make parsing quicker and ensure that addresses comply with postal
 standards that normally permit ony abbrviated sub countries .
+
+=item force_post_code (optional)
+
+When this option is set to a positive value, the address must contain
+a post code. If it does not then an error flag is raised. If this option
+is set to 0 than a post code is optional.
+
+By default for this option is true.
 
 =back
 
@@ -257,10 +277,15 @@ The  following keys are used for each property -
 Create a formatted text report
 
     the input string
-    the name and value of each defined component
-    the addrsess type
+    the cleaned input string
+    the country type
+    the address type
+    any non matching part of input string
     if any parsing errors occured
-    any non matching component
+    error description
+
+    the name and value of each defined component
+
 
 Returns a string containing a multi line formatted text report
 
@@ -283,16 +308,16 @@ description.
 The huge number of character combinations that can form a valid address makes
 it is impossible to correctly identify them all.
 
-Valid addresses must contain a suburb, subcountry (state) and post code,
-in that order. This format is widely accepted in Australia and the US. UK
-addresses will often include suburb, town, city and county, formats that
+Valid addresses must contain: property address, suburb and subcountry (state) in that order.
+This format is widely accepted in Australia and the US.
+
+UK addresses will often include suburb, town, city and county, formats that
 are very difficult to parse.
 
 Property names must be enclosed in single or double quotes like "Old Regret"
 
 Because of the large combination of possible addresses defined in the grammar,
 the program is not very fast.
-
 
 
 =head1 REFERENCES
@@ -336,7 +361,7 @@ AddressParse was written by Kim Ryan <kimryan at cpan d o t org>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2013 Kim Ryan. All rights reserved.
+Copyright (c) 2014 Kim Ryan. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
@@ -354,7 +379,7 @@ use Lingua::EN::AddressParse::Grammar;
 use Lingua::EN::NameParse;
 use Parse::RecDescent;
 
-our $VERSION = '1.18';
+our $VERSION = '1.19';
 
 #------------------------------------------------------------------------------
 # Create a new instance of an address parsing object. This step is time
@@ -368,13 +393,17 @@ sub new
     my $address = {};
     bless($address,$class);
 
+    # option defaults
+    $address->{'force_post_code'} = 1;
+
     # Add error checking for invalid keys?
     foreach my $curr_key (keys %args)
     {
         $address->{$curr_key} = $args{$curr_key};
     }
 
-    my $grammar = &Lingua::EN::AddressParse::Grammar::_create($address);
+    # create the grammar tree (this is country dependant)
+    my $grammar = Lingua::EN::AddressParse::Grammar::_create($address);
 
     $address->{parse} = new Parse::RecDescent($grammar);
 
@@ -386,23 +415,34 @@ sub parse
     my $address = shift;
     my ($input_string) = @_;
 
+    # Save original data so we can check effect of auto cleaning
+    $address->{original_input} = $input_string;
+
     $address->{input_string} = $input_string;
 
     chomp($address->{input_string});
-    # Replace commas (which can be used to chunk sections of addresses) with space
+
+    my $pre_cursor;
+    ($pre_cursor,$address->{input_string}) = _remove_precursor($address->{input_string});
+
+
+    # Replace commas (which can be used to chunk sections of addresses) with spaces
     $address->{input_string} =~ s/,/ /g;
 
-    $address = _assemble($address);
+    if ( $address->{auto_clean} )
+    {
+        $address->{input_string} = _clean($address);
+    }
+
+    # We need to add a trailing space to the input string. This is because the grammar
+    # tree expects a terminator (the space) Ffor every production, optionally followed
+    # by other productions or any final non matching text.
+    # This space will be removed by tye _assemble function
+    $address->{input_string} .= ' ';
+
+    $address = _assemble($address,$pre_cursor);
     _validate($address);
 
-    # If errors occurred on initial parse, clean input data (if that option was
-    # selected by the user) and try again
-    if ( $address->{error} and $address->{auto_clean} )
-    {
-        $address->{input_string} = _clean($address->{input_string});
-        $address = _assemble($address);
-        _validate($address);
-    }
 
     return($address,$address->{error});
 }
@@ -426,7 +466,7 @@ sub case_components
     {
         my $cased_value;
 
-        if ( $curr_key =~ /^(street|street_type|suburb|property_name|sub_property_identifier)$/ )
+        if ( $curr_key =~ /^(street|street_type|suburb|property_name|sub_property_identifier|pre_cursor)$/ )
         {
             # Surnames can be used for street's or suburbs so this method
             # will give correct capitalisation for most cases
@@ -444,10 +484,15 @@ sub case_components
                 foreach my $word (@words)
                 {
                     my $cased_word;
-                    if ( length($word) > 1 and $word !~ /\d/ )
+                    if ( $word =~ /^\d{1,2}(st|nd|rd|th)$/i)
+                    {
+                        # ordinal component, as in  3rd Floor
+                        $cased_word = lc($word);
+                    }
+                    elsif ( length($word) > 1 and $word !~ /\d/ )
                     {
                         # only need to title case words such as UNIT
-                        $cased_word = &Lingua::EN::NameParse::case_surname($word);
+                        $cased_word = Lingua::EN::NameParse::case_surname($word);
                     }
                     else
                     {
@@ -460,7 +505,7 @@ sub case_components
             }
             else
             {
-                $cased_value = &Lingua::EN::NameParse::case_surname($orig_components{$curr_key});
+                $cased_value = Lingua::EN::NameParse::case_surname($orig_components{$curr_key});
             }
 
         }
@@ -490,18 +535,18 @@ sub case_all
 
         my %component_order=
         (
-           'rural'   => [ 'property_name','suburb','subcountry','post_code','country'],
-           'post_box'=> [ 'post_box','suburb','subcountry','post_code','country' ],
-           'road_box'=> [ 'road_box','street','street_type','suburb','subcountry','post_code','country' ]
+           'rural'   => [ qw/pre_cursor property_name suburb subcountry post_code country/],
+           'post_box'=> [ qw/pre_cursor post_box suburb subcountry post_code country/ ],
+           'road_box'=> [ qw/pre_cursor road_box street street_type suburb subcountry post_code country/ ]
 
         );
         if ( $address->{country} eq 'US' )
         {
-           $component_order{'suburban'} =  [ 'property_identifier','street','street_type','street_direction','sub_property_identifier','suburb','subcountry','post_code','country'],
+           $component_order{'suburban'} = [ qw/pre_cursor property_identifier street street_type street_direction sub_property_identifier suburb subcountry post_code country/];
         }
         else
         {
-           $component_order{'suburban'} =  [ 'sub_property_identifier','property_identifier','street','street_type','suburb','subcountry','post_code','country'],
+           $component_order{'suburban'} = [ qw/pre_cursor sub_property_identifier property_identifier street street_type suburb subcountry post_code country/ ];
         }
 
         my %component_vals = $address->case_components;
@@ -548,9 +593,9 @@ sub report
 
     my $report = '';
 
-    _fmt_report_line(\$report,"Input",$address->{input_string});
-
-
+    _fmt_report_line(\$report,"Original Input",$address->{original_input});
+    _fmt_report_line(\$report,"Cleaned Input",$address->{input_string});
+    _fmt_report_line(\$report,"Country address format",$address->{country_code});
 
     my %props = $address->properties;
     if ( $props{type} )
@@ -561,6 +606,8 @@ sub report
     _fmt_report_line(\$report,"Non matching part",$props{non_matching});
     _fmt_report_line(\$report,"Error",$address->{error});
     _fmt_report_line(\$report,"Error descriptions",$address->{error_desc});
+    _fmt_report_line(\$report,"Case all",$address->case_all);
+
 
     _fmt_report_line(\$report,"COMPONENTS",'');
     my %comps = $address->case_components;
@@ -576,7 +623,7 @@ sub report
 }
 
 #-------------------------------------------------------------------------------
-# What does it do?
+
 sub _fmt_report_line
 {
     my ($report_ref,$label,$value) = @_;
@@ -590,24 +637,33 @@ sub _fmt_report_line
 #------------------------------------------------------------------------------
 # Parse the address
 # Assemble all the components of the address into an object
-# Apply some data conditioning
+# Remove trailing white space
 
 sub _assemble
 {
 
     my $address = shift;
+    my ($pre_cursor) = @_;
 
     # Parse the address according to the rules defined in the AddressParse::Grammar module,
     # $::RD_TRACE  = 1;  # for debugging RecDescent output
     # Use Parse::RecDescent to do the parsing. 'full_address' is a label for the complete grammar tree
     my $parsed_address = $address->{parse}->full_address($address->{input_string});
 
-    # Place components into a separate hash, so they can be easily returned to
-    # for the user to inspect and modify
+    # Place components into a separate hash, so they can be easily returned to the user to inspect and modify
     $address->{components} = ();
 
+    if ($pre_cursor)
+    {
+        $address->{components}{'pre_cursor'} = $pre_cursor;
+    }
+    else
+    {
+        $address->{components}{'pre_cursor'} = '';
+    }
+
     # For correct matching, the grammar of each component must include the
-    # trailing space that separates it from any following word. This should
+    # trailing space that seperates it from any following word. This should
     # now be removed from each component
 
     $address->{components}{post_box} = '';
@@ -668,7 +724,7 @@ sub _assemble
     {
         my $sub_country = _trim_trailing_space($parsed_address->{subcountry});
 
-        # Force sub country to abbreviated form, South Australia becomes SA
+        # Force sub country to abbreviated form, South Australia becomes SA, Michigan become MI etc
         if ($address->{abbreviate_subcountry})
         {
             my $country = new Locale::SubCountry($address->{country});
@@ -727,7 +783,14 @@ sub _validate
         $address->{error} = 1;
     }
 
-     if ( $address->{properties}{type} ne 'unknown' )
+    if ($address->{force_post_code} and not $address->{components}{post_code})
+    {
+        $address->{error} = 1;
+        $address->{error_desc} .= 'no post code';
+    }
+
+
+    if ( $address->{properties}{type} ne 'unknown' )
     {
         # illegal characters found, note a '#' can appear as an abbreviation for number in USA addresses
         if ( $address->{input_string} =~ /[^"A-Za-z0-9'\-\.,&#\/ ]/ )
@@ -735,20 +798,25 @@ sub _validate
             # Note, if auto_clean is on, illegal characters will have been removed
             # for second parsing and no error flag or message reported
             $address->{error} = 1;
-            $address->{error_desc} .= 'illegal chars';
+            $address->{error_desc} .= ':illegal chars';
 
         }
         if ( $address->{properties}{type} eq 'suburban' )
         {
-            # street name must have a vowel sound, or a digit for ordinal street type
-            if ( $address->{components}{street} !~ /[AEIOUYaeiouy0-9]/ )
+            my $street = $address->{components}{street};
+            if ($street !~ /\d/ and length($street) > 1 )
             {
-                $address->{error} = 1;
-                $address->{error_desc} .= ':no vowel sound in street';
+                # Not and ordinal or single letter street type
+                if ( $address->{components}{street} !~ /[AEIOUY]/i )
+                {
+                    # street name must have a vowel sound,
+                    $address->{error} = 1;
+                    $address->{error_desc} .= ':no vowel sound in street';
+                }
             }
         }
 
-        if ( $address->{components}{suburb} !~ /[AEIOUYaeiouy]/ )
+        if ( $address->{components}{suburb} !~ /[AEIOUY]/i )
         {
             $address->{error} = 1;
             $address->{error_desc} .= ':no vowel sound in suburb';
@@ -761,59 +829,114 @@ sub _validate
 
 sub _clean
 {
-    my ($input_string) = @_;
+    my $address = shift;
+
+    my ($input) = $address->{input_string};
+
+    # Remove annotations enclosed in brackets, such as 1 Smith St (Cnr Brown St)
+    $input =~ s|\(.*\)||;
 
     # remove illegal characters
     # & can be part of property name
     # hash (#) may denote number for USA address
     # quotes can occur as property name delimiters
 
-    $input_string =~ s|[^A-Za-z0-9&#/.'" -]||go;
+    $input =~ s|[^A-Za-z0-9&#/.'" -]||go;
 
     # remove repeating, leading and trailing spaces
-    $input_string =~ s|  +| |go ;
-    $input_string =~ s|^ ||;
-    $input_string =~ s| $||;
+    $input =~ s|  +| |go ;
+    $input =~ s|^ ||;
+    $input =~ s| $||;
 
     # Expand abbreviations that are too short
-    $input_string =~ s|CSEWY|CAUSEWAY|;  # street nouns
-    $input_string =~ s|Csewy|Causeway|;
-    $input_string =~ s|LVL|LEVEL|; # sub property identifiers
-    $input_string =~ s|Lvl|Level|;
+    $input =~ s|CSEWY|CAUSEWAY|;  # street nouns
+    $input =~ s|Csewy|Causeway|;
 
-    $input_string =~ s|^UN? |Unit |; # sub property names
-    $input_string =~ s|^U(\d+)|Unit $1|;
+    $input =~ s|^FCTR?Y |FACTORY |;
+    $input =~ s|^Fctr?y |Factory |;
+    $input =~ s|^FACT?R?Y? |FACTORY |;
+    $input =~ s|^Fact?r?y? |Factory |;
+
+    $input =~ s|LVL |LEVEL |; # sub property identifiers
+    $input =~ s|Lvl |Level |;
+    $input =~ s|^UN? |Unit |;
+    $input =~ s|^U(\d+)|Unit $1|;
 
 
-    # Fix badly formed number dividers sush as 14/ 12, 2- 7A
-    $input_string =~ s|/ |/|;
-    $input_string =~ s| /|/|;
-    $input_string =~ s|- |-|;
-    $input_string =~ s| -|/|;
-    $input_string =~ s|,| |;
-
-    # Remove annotations enclosed in brackets, such as 1 Smith St (Cnr Brown St)
-    $input_string =~ s|(\(.*\))||;
+    # Fix badly formed number dividers such as home unit format of 14/ 12 becomes 14/12, 2- 7A becomes 2-7A
+    $input =~ s|/ |/|;
+    $input =~ s| /|/|;
+    $input =~ s|- |-|;
+    $input =~ s| -|/|;
 
     # Remove redundant spaces in property identifiers,  21 B Smith St becomes 21B Smith St
-    # Note cannot use N,E,S,W as they can be street direction prefix
-    # $input_string =~ s|^(\d+) ([A-D] )|$1$2|;
 
-    # Add a space to separate sub property type from number, UNIT2 becomes UNIT 2
-    $input_string =~ s|^(Unit)(\d+)|$1 $2|i;
+    if ( $input !~ /^\d+ [A-Z] S[T|t]/ )
+    {
+        # Don't remove space before single letter streets such as 21 B Street
+        if ( $address->{country_code} eq 'US' )
+        {
+            # Note cannot use N,E,S,W as they can be street direction prefix, as in 1 E MAIN STREET
+            # Assume that the direction prefix is the more likely case
+            $input =~ s|^(\d+) ([A-DF-MO-RT-VX-Z] )|$1$2|;
+        }
+        else
+        {
+            $input =~ s|^(\d+) ([A-Z] )|$1$2|;
+        }
+    }
 
-    # Add a space to spearate '#' from number #2 becomes '# 2'
-    $input_string =~ s|(#)(\d+)|$1 $2|i;
+    # Add or remove spaces in sub property identifiers
+    if ( $address->{country_code} eq 'US' )
+    {
+        # Fix US sub property identifiers that appear after stree name and type
+        # add space between # and the number so #2 becomes '# 2'
+        $input =~ s| #(\d)| # $1|;
+        $input =~ s| #([A-Z])| # $1|;
+        $input =~ s| (APT)(\d)| $1 $2|i;
+
+        # remove redundnant space so # 34 B becomes # 34B
+        $input =~ s| # (\d+) (\w) | # $1$2 |;
+    }
+    else
+    {
+        # Add a space to separate sub property type from number, UNIT2 becomes UNIT 2
+        $input =~ s/^(Unit|Lot|Apt|Shop)(\d)/$1 $2/i;
+    }
 
     # Remove redundant slash or dash
     # Unit 1B/22, becomes Unit 1B 22, Flat 2-12 becomes Flat 2 12
-    $input_string =~ s/^(Unit|Un|U|Shop|Shed|Suite|Fac|Fact|Facty|Fctry|Factory) (\d+[A-Z]?)[\/-]/$1 $2 /i;
+    $input =~ s/^(\w{2,}) (\d+[A-Z]?)[\/-]/$1 $2 /i;
+    # Unit J1/ 39 becomes  Unit J1 39
+    $input =~ s/^(\w{2,}) ([A-Z]\d{0,3})[\/-]/$1 $2 /i;
+
 
     # remove dash that is not from a sequence, such as D-5 or 22-A
-    $input_string =~ s|([A-Z])-(\d)|$1$2|;
-    $input_string =~ s|(\d)-([A-Z])|$1$2|;
+    $input =~ s|([A-Z])-(\d)|$1$2|;
+    $input =~ s|(\d)-([A-Z])|$1$2|;
 
-    return($input_string);
+    return($input);
+}
+#-------------------------------------------------------------------------------
+# Remove any "care of" type of precursor to the main address
+# such as: C/O BRAKEFIELD  BETTY S PO BOX 214 GULF HAMMOCK, FL 32639-0214
+
+sub _remove_precursor
+{
+    my ($input) = @_;
+    my ($pre_cursor_found,$pre_cursor,$address_start,$address_end);
+
+    if ($input =~ m{^(C/O.*?|Attn.*?) (\d+|PO BOX)( .*)}i)
+    {
+        $pre_cursor = $1;
+        $address_start = $2;
+        $address_end = $3;
+        return($pre_cursor, $address_start . $address_end);
+    }
+    else
+    {
+        return('',$input)
+    }
 }
 #------------------------------------------------------------------------------
 # Remove any trailing spaces

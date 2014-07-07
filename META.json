@@ -41,11 +41,11 @@
    "provides" : {
       "Lingua::EN::AddressParse" : {
          "file" : "lib/Lingua/EN/AddressParse.pm",
-         "version" : "1.18"
+         "version" : "1.19"
       },
       "Lingua::EN::AddressParse::Grammar" : {
          "file" : "lib/Lingua/EN/AddressParse/Grammar.pm",
-         "version" : "1.18"
+         "version" : "1.19"
       }
    },
    "release_status" : "stable",
@@ -54,5 +54,5 @@
          "http://dev.perl.org/licenses/"
       ]
    },
-   "version" : "1.18"
+   "version" : "1.19"
 }
