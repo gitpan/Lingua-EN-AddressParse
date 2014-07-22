@@ -35,7 +35,7 @@ use strict;
 use warnings;
 use Locale::SubCountry;
 
-our $VERSION = '1.19';
+our $VERSION = '1.20';
 
 #-------------------------------------------------------------------------------
 # Rules that define valid orderings of an addresses components
@@ -257,7 +257,6 @@ q{
 my $post_box_rule =
 q{
     post_box suburb subcountry post_code(?) country(?) non_matching(?)
-    # post_box postal_region subcountry post_code(?) country(?) non_matching(?)
     {
         $return =
         {
@@ -335,7 +334,8 @@ q{
         /Level (\d+|[GM]) (Building|Tower) \d+[A-Z]? /i |
         /Level (\d+|[GM]) (Building|Tower) [A-Z] /i |
         /Unit \d+[A-Z]? (Block|Bldg|Building|Tower) ([A-Z]|\d+) /i |
-        /\d{1,2}(st|nd|rd|th) (Floor|Flr|Fl) /i
+        /\d{1,2}(st|nd|rd|th) (Floor|Flr|Fl) /i |
+        /(Floor|Flr|Fl) \d{1,2} /i
 
         |
 
@@ -396,8 +396,10 @@ q{
 
         /\d{1,3}[A-Z]?[\/ ]\d{1,5}-\d{1,5} / |  # 12/42-44, 12 42-44
         /\d{1,3}[A-Z]?[\/ ]\d{1,5}[A-Z]? /   |  # 12A/42, 12 42A
+        /\d{1,4} 1\/2 /                      |  # fractional number such as 22 1/2 (half numbers are valid in US)
         /\d{1,5}-\d{1,5} /                   |  # 1002-1006
         /\d{1,5}[A-Z]? /                        # 10025A
+
 };
 
 #------------------------------------------------------------------------------
@@ -450,32 +452,6 @@ q{
 
 };
 
-#------------------------------------------------------------------------------
-
-my $postal_region =
-q{
-    # PO Box addresses can have a box descriptor after the suburb, such as
-    # PO Box 123 Victoria Park Private Boxes
-
-    postal_region : po_suburb  po_description(?)
-    {
-        if ( $item[0] and $item[1][0] )
-        {
-            $return = "$item[0]$item[1][0]"
-        }
-        else
-        {
-           $return = $item[0]
-        }
-    }
-    # 1-3 words ...!po_description
-    po_suburb :
-
-    po_description :
-        /Private Boxes /i |
-        /Delivery Centre /i
-
-};
 
 #------------------------------------------------------------------------------
 
@@ -602,6 +578,12 @@ q{
 
 
     street_name :
+
+        /(N |E |S |W |Dr )?(Martin Luther|ML) King ([JS]r )?/i
+        {
+            $return = "$item[1]"
+        }
+        |
 
         # Queen's Park Road, Grand Ridge Rd, Terrace Park Drive, Lane Cove Road etc
         any_word /(Burn|Cay|Cove|Garden|Glen|Grove|Island|Isle|Pass|Park|Parkway|Ridge|View) /i ...street_type
@@ -748,7 +730,7 @@ q{
          /Trl /i      | /Trail /i        |
          /Throughway /i  |
          /Wl?k\.? /i  | /Walk /i         |
-         /Wy\.? /i    | /Way /i
+         /Wy\.? /i    | /Way /i          | /Wynde /i
 
      street_direction:
 
@@ -929,7 +911,6 @@ sub _create
     $grammar .= $property_identifier;
     $grammar .= $property_name;
     $grammar .= $post_box;
-    # $grammar .= $postal_region;
     $grammar .= $road_box;
     $grammar .= $street;
     $grammar .= $suburb;

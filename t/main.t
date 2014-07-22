@@ -13,7 +13,7 @@ my $input;
 my %args =
 (
   country     => 'Australia',
-  auto_clean  => 0,
+  auto_clean  => 1,
   force_case  => 1,
   abbreviate_subcountry => 1
 );
@@ -103,7 +103,7 @@ ok
     "Australian rural address"
 );
 
-$input = 'PO BOX 71 TOONGABBIE NSW 2146';
+$input = 'PO BOX 71 TOONGABBIE PRIVATE BOXES NSW 2146';
 $address->parse($input);
 %comps = $address->components;
 ok
@@ -112,7 +112,8 @@ ok
         $comps{post_box} eq 'PO BOX 71' and
         $comps{suburb} eq 'TOONGABBIE' and
         $comps{subcountry} eq 'NSW' and
-        $comps{post_code} eq '2146'
+        $comps{post_code} eq '2146' and
+        $comps{po_box_type} eq 'PRIVATE BOXES'
     ),
     "Australian PO Box"
 );
@@ -121,7 +122,9 @@ ok
 $input = "12 SMITH ST ULTIMO NSW 2007 : ALL POSTAL DELIVERIES";
 $address->parse($input);
 %props = $address->properties;
-ok($props{non_matching} eq ": ALL POSTAL DELIVERIES ", "Australian Non matching");
+ok($props{non_matching} eq "ALL POSTAL DELIVERIES ", "Australian Non matching");
+
+
 
 # Test other countries
 

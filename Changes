@@ -1,10 +1,22 @@
 Revision history for Perl CPAN module Lingua::EN::AddressParse
 
+1.20 22 Jul 2014
+    added person's street name such as 'Dr Martin Luther King'
+
+    new component added, po_box_type to describe type of post box,
+      so 'PO BOX 123 Newtown Private Boxes WA 6865' will return
+      suburb of Newtown and po_box_type of Private Boxes
+
+    fixed incorrect error descriptions on parsing error
+    added more sub property identifiers
+    added more street types
+    detect missing mandatory country parameter in arguments to 'new' method
+
 1.19 7 Jul 2014
     auto_clean always cleans string, not just on parsing error
     during auto_clean, spaces now removed in sub property identifer, such as 1 A Main St -> 1A Main St
     fixed floor description in sub property identifier
-    added street type such as 'John F Kennedy Boulevard'
+    added street name such as 'John F Kennedy Boulevard'
     post codes can now be optional with the force_post_code argument
     added more 3 word street names
     added more street types

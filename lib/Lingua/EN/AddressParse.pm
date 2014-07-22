@@ -379,7 +379,7 @@ use Lingua::EN::AddressParse::Grammar;
 use Lingua::EN::NameParse;
 use Parse::RecDescent;
 
-our $VERSION = '1.19';
+our $VERSION = '1.20';
 
 #------------------------------------------------------------------------------
 # Create a new instance of an address parsing object. This step is time
@@ -389,6 +389,11 @@ sub new
 {
     my $class = shift;
     my %args = @_;
+
+    unless ( $args{country} )
+    {
+        die "Cannot start parser. You must specify a value for the country in the options hash.\nValid options are AUS,GB,US or CA";
+    }
 
     my $address = {};
     bless($address,$class);
@@ -423,7 +428,11 @@ sub parse
     chomp($address->{input_string});
 
     my $pre_cursor;
-    ($pre_cursor,$address->{input_string}) = _remove_precursor($address->{input_string});
+    ($pre_cursor,$address->{input_string}) = _extract_precursor($address->{input_string});
+
+    my $po_box_type;
+    ($po_box_type,$address->{input_string}) = _extract_po_box_type($address->{input_string});
+
 
 
     # Replace commas (which can be used to chunk sections of addresses) with spaces
@@ -440,7 +449,7 @@ sub parse
     # This space will be removed by tye _assemble function
     $address->{input_string} .= ' ';
 
-    $address = _assemble($address,$pre_cursor);
+    $address = _assemble($address,$pre_cursor,$po_box_type);
     _validate($address);
 
 
@@ -466,7 +475,7 @@ sub case_components
     {
         my $cased_value;
 
-        if ( $curr_key =~ /^(street|street_type|suburb|property_name|sub_property_identifier|pre_cursor)$/ )
+        if ( $curr_key =~ /^(street|street_type|suburb|property_name|sub_property_identifier|pre_cursor|po_box_type)$/ )
         {
             # Surnames can be used for street's or suburbs so this method
             # will give correct capitalisation for most cases
@@ -536,7 +545,7 @@ sub case_all
         my %component_order=
         (
            'rural'   => [ qw/pre_cursor property_name suburb subcountry post_code country/],
-           'post_box'=> [ qw/pre_cursor post_box suburb subcountry post_code country/ ],
+           'post_box'=> [ qw/pre_cursor post_box suburb po_box_type subcountry post_code country/ ],
            'road_box'=> [ qw/pre_cursor road_box street street_type suburb subcountry post_code country/ ]
 
         );
@@ -627,7 +636,7 @@ sub report
 sub _fmt_report_line
 {
     my ($report_ref,$label,$value) = @_;
-    $$report_ref .= sprintf("%-23.23s : %s\n",$label,$value);
+    $$report_ref .= sprintf("%-23.23s '%s'\n",$label,$value);
 }
 
 #------------------------------------------------------------------------------
@@ -643,7 +652,7 @@ sub _assemble
 {
 
     my $address = shift;
-    my ($pre_cursor) = @_;
+    my ($pre_cursor,$po_box_type) = @_;
 
     # Parse the address according to the rules defined in the AddressParse::Grammar module,
     # $::RD_TRACE  = 1;  # for debugging RecDescent output
@@ -660,6 +669,15 @@ sub _assemble
     else
     {
         $address->{components}{'pre_cursor'} = '';
+    }
+
+    if ($po_box_type)
+    {
+        $address->{components}{'po_box_type'} = $po_box_type;
+    }
+    else
+    {
+        $address->{components}{'po_box_type'} = '';
     }
 
     # For correct matching, the grammar of each component must include the
@@ -781,45 +799,51 @@ sub _validate
     if ( $address->{properties}{non_matching} )
     {
         $address->{error} = 1;
+        $address->{error_desc} = 'non matching section : ' . $address->{properties}{non_matching};
     }
-
-    if ($address->{force_post_code} and not $address->{components}{post_code})
+    else
     {
-        $address->{error} = 1;
-        $address->{error_desc} .= 'no post code';
-    }
-
-
-    if ( $address->{properties}{type} ne 'unknown' )
-    {
-        # illegal characters found, note a '#' can appear as an abbreviation for number in USA addresses
-        if ( $address->{input_string} =~ /[^"A-Za-z0-9'\-\.,&#\/ ]/ )
+        if ( $address->{properties}{type} eq 'unknown' )
         {
-            # Note, if auto_clean is on, illegal characters will have been removed
-            # for second parsing and no error flag or message reported
             $address->{error} = 1;
-            $address->{error_desc} .= ':illegal chars';
-
+            $address->{error_desc} .= 'unknown address format';
         }
-        if ( $address->{properties}{type} eq 'suburban' )
+        else
         {
-            my $street = $address->{components}{street};
-            if ($street !~ /\d/ and length($street) > 1 )
+            if ($address->{force_post_code} and not $address->{components}{post_code})
             {
-                # Not and ordinal or single letter street type
-                if ( $address->{components}{street} !~ /[AEIOUY]/i )
+                $address->{error} = 1;
+                $address->{error_desc} .= ':no post code';
+            }
+
+            # illegal characters found, note a '#' can appear as an abbreviation for number in USA addresses
+            if ( $address->{input_string} =~ /[^"A-Za-z0-9'\-\.,&#\/ ]/ )
+            {
+                # Note, if auto_clean is on, illegal characters will have been removed
+                # for second parsing and no error flag or message reported
+                $address->{error} = 1;
+                $address->{error_desc} .= ':illegal chars';
+            }
+            if ( $address->{properties}{type} eq 'suburban' )
+            {
+                my $street = $address->{components}{street};
+                if ($street !~ /\d/ and length($street) > 1 )
                 {
-                    # street name must have a vowel sound,
-                    $address->{error} = 1;
-                    $address->{error_desc} .= ':no vowel sound in street';
+                    # Not and ordinal or single letter street type
+                    if ( $address->{components}{street} !~ /[AEIOUY]/i )
+                    {
+                        # street name must have a vowel sound,
+                        $address->{error} = 1;
+                        $address->{error_desc} .= ':no vowel sound in street';
+                    }
                 }
             }
-        }
 
-        if ( $address->{components}{suburb} !~ /[AEIOUY]/i )
-        {
-            $address->{error} = 1;
-            $address->{error_desc} .= ':no vowel sound in suburb';
+            if ( $address->{components}{suburb} !~ /[AEIOUY]/i )
+            {
+                $address->{error} = 1;
+                $address->{error_desc} .= ':no vowel sound in suburb';
+            }
         }
     }
 }
@@ -897,6 +921,9 @@ sub _clean
 
         # remove redundnant space so # 34 B becomes # 34B
         $input =~ s| # (\d+) (\w) | # $1$2 |;
+
+        # remove redundnant '#'
+         $input =~ s| APT #| Apt |i;
     }
     else
     {
@@ -906,9 +933,9 @@ sub _clean
 
     # Remove redundant slash or dash
     # Unit 1B/22, becomes Unit 1B 22, Flat 2-12 becomes Flat 2 12
-    $input =~ s/^(\w{2,}) (\d+[A-Z]?)[\/-]/$1 $2 /i;
+    $input =~ s/^([A-Za-z]{2,}) (\d+[A-Z]?)[\/-]/$1 $2 /i;
     # Unit J1/ 39 becomes  Unit J1 39
-    $input =~ s/^(\w{2,}) ([A-Z]\d{0,3})[\/-]/$1 $2 /i;
+    $input =~ s/^([A-Za-z]{2,}) ([A-Z]\d{0,3})[\/-]/$1 $2 /i;
 
 
     # remove dash that is not from a sequence, such as D-5 or 22-A
@@ -918,13 +945,14 @@ sub _clean
     return($input);
 }
 #-------------------------------------------------------------------------------
-# Remove any "care of" type of precursor to the main address
+# Remove any "care of" type of precursor from the main address
 # such as: C/O BRAKEFIELD  BETTY S PO BOX 214 GULF HAMMOCK, FL 32639-0214
+# It will be saved as an address attribute
 
-sub _remove_precursor
+sub _extract_precursor
 {
     my ($input) = @_;
-    my ($pre_cursor_found,$pre_cursor,$address_start,$address_end);
+    my ($pre_cursor,$address_start,$address_end);
 
     if ($input =~ m{^(C/O.*?|Attn.*?) (\d+|PO BOX)( .*)}i)
     {
@@ -932,6 +960,28 @@ sub _remove_precursor
         $address_start = $2;
         $address_end = $3;
         return($pre_cursor, $address_start . $address_end);
+    }
+    else
+    {
+        return('',$input)
+    }
+}
+#-------------------------------------------------------------------------------
+# Remove any desription that follow the suburb from the main address
+# such as: PO BOX 1305 BIBRA LAKE PRIVATE BOXES WA 6965"
+# It will be saved as an address attribute
+
+sub _extract_po_box_type
+{
+    my ($input) = @_;
+    my ($po_box_type,$address_start,$address_end);
+
+    if ($input =~ /^(.*? )(Private Boxes)( .*)$/i )
+    {
+        $address_start = $1;
+        $po_box_type = $2;
+        $address_end = $3;
+        return($po_box_type, $address_start . $address_end);
     }
     else
     {
