@@ -18,7 +18,7 @@ my %args =
   abbreviate_subcountry => 1
 );
 
-my $address = new Lingua::EN::AddressParse(%args);
+my $address = Lingua::EN::AddressParse->new(%args);
 
 $input = "12A/74-76 OLD AMINTA CRESCENT HASALL GROVE NEW SOUTH WALES 2761 AUSTRALIA";
 $address->parse($input);
@@ -129,7 +129,7 @@ ok($props{non_matching} eq "ALL POSTAL DELIVERIES ", "Australian Non matching");
 # Test other countries
 
 %args = ( country  => 'US');
-$address = new Lingua::EN::AddressParse(%args);
+$address = Lingua::EN::AddressParse->new(%args);
 
 $input = "12 AMINTA CRESCENT S # 24E BEVERLEY HILLS CA 90210-1234";
 $address->parse($input);
@@ -167,7 +167,7 @@ ok
 
 %args = ( country => 'Canada' );
 
-$address = new Lingua::EN::AddressParse(%args);
+$address = Lingua::EN::AddressParse->new(%args);
 
 $input = "12 AMINTA CRESCENT BEVERLEY HILLS BRITISH COLUMBIA K1B 4L7";
 $address->parse($input);
@@ -188,7 +188,7 @@ ok
 
 %args = ( country  => 'United Kingdom',  auto_clean  => 1);
 # note pre cursor only detected if auto_clean is on
-$address = new Lingua::EN::AddressParse(%args);
+$address = Lingua::EN::AddressParse->new(%args);
 
 $input = "C/O MR A B SMITH XYZ P/L: 12 AMINTA CRESCENT NEWPORT IOW SW1A 9ET";
 $address->parse($input);

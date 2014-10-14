@@ -19,6 +19,7 @@ Module::Build -> new
  {
 	locale              => 1.00,
 	strict              => 1.04,
+    Carp                => 1.08,
 	Test::Pod::Coverage => 1.04,
 	utf8                => 1.09,
 	warnings            => 1.12,

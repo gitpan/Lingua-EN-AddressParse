@@ -35,7 +35,7 @@ use strict;
 use warnings;
 use Locale::SubCountry;
 
-our $VERSION = '1.20';
+our $VERSION = '1.21';
 
 #-------------------------------------------------------------------------------
 # Rules that define valid orderings of an addresses components
@@ -47,7 +47,11 @@ my $non_usa_suburban_address_rules =
 q{
     full_address :
 
-    sub_property_identifier(?) property_identifier(?) street_noun suburb subcountry post_code(?) country(?) non_matching(?)
+    # Note: both sub property and property indetifiers should be optional. This
+    # will allow for cases such as 'Lot 123 Xyz Street' where Lot is in effect the house number, even though 'Lot' is grouped as a sub_property lablel
+    # Also, cases such as 'SHOP 12A, CHAPEL RD STH' have no street number so are incomplete, but still may need to be parsed
+
+    sub_property_identifier(?) property_identifier(?) street_untyped suburb subcountry post_code(?) country(?) non_matching(?)
     {
         # block of code to define actions upon successful completion of a
         # 'production' or rule
@@ -86,23 +90,6 @@ q{
         }
     }
     |
-        sub_property_identifier(?) property_identifier(?) street_name_single_word  suburb subcountry post_code(?) country(?) non_matching(?)
-    {
-        $return =
-        {
-            sub_property_identifier => $item[1][0],
-            property_identifier     => $item[2][0],
-            street                  => $item[3],
-            street_type             => '',
-            suburb                  => $item[4],
-            subcountry              => $item[5],
-            post_code               => $item[6][0],
-            country                 => $item[7][0],
-            non_matching            => $item[8][0],
-            type                    => 'suburban'
-        }
-    }
-    |
 
 
 };
@@ -112,7 +99,10 @@ my $usa_suburban_address_rules =
 q{
     full_address :
 
-    property_identifier(?) street_noun sub_property_identifier(?) suburb subcountry post_code(?) country(?) non_matching(?)
+
+    property_identifier(?) street_untyped sub_property_identifier(?) suburb subcountry post_code(?) country(?) non_matching(?)
+    # (needs higher precedence than streets with types)
+
     {
         $return =
         {
@@ -148,57 +138,7 @@ q{
         }
     }
     |
-    property_identifier(?) government_street_name  sub_property_identifier(?) suburb subcountry post_code(?) country(?) non_matching(?)
-    {
-        $return =
-        {
-            property_identifier     => $item[1][0],
-            street                  => $item[2],
-            street_type             => '',
-            sub_property_identifier => $item[3][0],
-            suburb                  => $item[4],
-            subcountry              => $item[5],
-            post_code               => $item[6][0],
-            country                 => $item[7][0],
-            non_matching            => $item[8][0],
-            type                    => 'suburban'
-        }
-    }
-    |
-    property_identifier(?) street_name_single_word sub_property_identifier(?) suburb subcountry post_code(?) country(?) non_matching(?)
-    {
-        $return =
-        {
-            property_identifier     => $item[1][0],
-            street                  => $item[2],
-            street_type             => '',
-            sub_property_identifier => $item[3][0],
-            suburb                  => $item[4],
-            subcountry              => $item[5],
-            post_code               => $item[6][0],
-            country                 => $item[7][0],
-            non_matching            => $item[8][0],
-            type                    => 'suburban'
-        }
-    }
-    |
-    sub_property_identifier(?) property_identifier(?) street_name_single_word  suburb subcountry post_code(?) country(?) non_matching(?)
-    {
-        $return =
-        {
-            sub_property_identifier => $item[1][0],
-            property_identifier     => $item[2][0],
-            street                  => $item[3],
-            street_type             => '',
-            suburb                  => $item[4],
-            subcountry              => $item[5],
-            post_code               => $item[6][0],
-            country                 => $item[7][0],
-            non_matching            => $item[8][0],
-            type                    => 'suburban'
-        }
-    }
-    |
+
 };
 
 #-------------------------------------------------------------------------------
@@ -383,8 +323,8 @@ q{
         /# /               # Note '#' is a common abbreviation for number in USA
 
     sub_property_number :
-        /\d{1,6}[A-Z]?/i | # such as 23B
-        /[A-Z]\d{0,3}/     # such as # D512
+        /\d{1,6}[A-Z]? /i | # such as 23B
+        /[A-Z]\d{0,3} /     # such as # D512
 
 };
 
@@ -457,78 +397,102 @@ q{
 
 my $street =
 q{
+
+    # Streets with no street type such as Road, Lane etc. Eg: Broadway, Highway 19, Avenue C
+    street_untyped :
+
+        major_road |
+        street_noun |
+        avenue_letter |
+        street_name_single_word
+
+
+    major_road :
+        /(State |US )?(Highway|Hwy) \d{1,3} ([N|E|S|W] )?/i |
+        /(State|County) Road \d{1,3} ([N|E|S|W] )?/i |
+        /(US |State |County )?Route \d{1,3} ([N|E|S|W] )?/i |
+        /Alt \d{1,3} ([N|E|S|W] )?/i  # Alternate road
+
    # allow for case where street type IS the street name, as in The PARADE
 
-   street_noun:
-       /The /i nouns { $return = "$item[1]$item[2]" }
+    street_noun:
+        /The /i nouns { $return = "$item[1]$item[2]" }
 
-      nouns:
-         /Arcade /i       |
-         /Avenue /i       |
-         /Battlement /i   |
-         /Boulevarde? /i  |
-         /Broadwater /i   |
-         /Broadway /i     |
-         /Cascades /i     |
-         /Carriageway /i  |
-         /Causeway /i     |
-         /Centre /i       |
-         /Chase /i        |
-         /Circle /i       |
-         /Circuit /i      |
-         /Close /i        |
-         /Concord /i      |
-         /Corniche /i     |
-         /Coronado /i     |
-         /Corso /i        |
-         /Crest /i        |
-         /Crossover /i    |
-         /Crescent /i     |
-         /Dell /i         |
-         /Deviation /i    |
-         /Driftway /i     |
-         /Entrance /i     |
-         /Esplanade /i    |
-         /Fairway /i      |
-         /Glade /i        |
-         /Glen /i         |
-         /Grange /i       |
-         /Greenway /i     |
-         /Grove /i        |
-         /Haven /i        |
-         /Kingsway /i     |
-         /Knoll /i        |
-         /Lanterns /i     |
-         /Mall /i         |
-         /Mainbrace /i    |
-         /Mainsail /i     |
-         /Overflow /i     |
-         /Oval /i         |
-         /Parade /i       |
-         /Portico /i      |
-         /Parkway /i      |
-         /Peninsula /i    |
-         /Plaza /i        |
-         /Promenade /i    |
-         /Rampart /i      |
-         /Retreat /i      |
-         /Ridge /i        |
-         /Row /i          |
-         /Serpentine /i   |
-         /Square /i       |
-         /Strand /i       |
-         /Terrace /i      |
-         /Walk /i         |
+        nouns:
+        /Arcade /i       |
+        /Avenue /i       |
+        /Battlement /i   |
+        /Boulevarde? /i  |
+        /Broadwater /i   |
+        /Broadway /i     |
+        /Cascades /i     |
+        /Carriageway /i  |
+        /Causeway /i     |
+        /Centre /i       |
+        /Chase /i        |
+        /Circle /i       |
+        /Circuit /i      |
+        /Close /i        |
+        /Concord /i      |
+        /Corniche /i     |
+        /Coronado /i     |
+        /Corso /i        |
+        /Crest /i        |
+        /Crossover /i    |
+        /Crescent /i     |
+        /Dell /i         |
+        /Deviation /i    |
+        /Driftway /i     |
+        /Entrance /i     |
+        /Esplanade /i    |
+        /Fairway /i      |
+        /Glade /i        |
+        /Glen /i         |
+        /Grange /i       |
+        /Greenway /i     |
+        /Grove /i        |
+        /Haven /i        |
+        /Kingsway /i     |
+        /Knoll /i        |
+        /Lanterns /i     |
+        /Mall /i         |
+        /Mainbrace /i    |
+        /Mainsail /i     |
+        /Overflow /i     |
+        /Oval /i         |
+        /Parade /i       |
+        /Portico /i      |
+        /Parkway /i      |
+        /Peninsula /i    |
+        /Plaza /i        |
+        /Promenade /i    |
+        /Rampart /i      |
+        /Retreat /i      |
+        /Ridge /i        |
+        /Row /i          |
+        /Serpentine /i   |
+        /Square /i       |
+        /Strand /i       |
+        /Terrace /i      |
+        /Walk /i         |
 
-         /Five Ways /i    |
-         /Six Ways /i     |
-         /Seven Ways /i   |
-         /Eight Ways /i   |
-         /Nine Ways /i
+        /Five Ways /i    |
+        /Six Ways /i     |
+        /Seven Ways /i   |
+        /Eight Ways /i   |
+        /Nine Ways /i
 
+    avenue_letter :
+        /Avenue [A-Z]/i
 
+    street_name_single_word:
+        /([N|E|S|W] )?Broadway /i |
+        /Kingsway /i |
+        /Queensway /i
 
-    # Street name is optional for cases where street name IS in street_prefix,
+    #----------------------------------------------------------------------------
+
+    # Street name is optional for cases where street name IS in the street_prefix,
     # like South Parade
 
     street: prefix(?) street_name(?)
@@ -586,7 +550,7 @@ q{
         |
 
         # Queen's Park Road, Grand Ridge Rd, Terrace Park Drive, Lane Cove Road etc
-        any_word /(Burn|Cay|Cove|Garden|Glen|Grove|Island|Isle|Pass|Park|Parkway|Ridge|View) /i ...street_type
+        any_word /(Burn|Cay|Cove|Garden|Glen|Grove|Island|Isle|Key|Loop|Pass|Park|Parkway|Ridge|View) /i ...street_type
         {
             $return = "$item[1]$item[2]"
         }
@@ -594,7 +558,7 @@ q{
         |
 
         # Glen Alpine Way, La Boheme Ave, St. Kilda Rd, Grove Valley Ave, Green Bay Road
-        /(Crescent|Glen|Green|Grove|La|Lt\.?|Park|St\.?) /i street_name_word ...street_type
+        /(Crescent|Glen|Green|Grove|Key|La|Lt\.?|Park|St\.?) /i street_name_word ...street_type
         {
             $return = "$item[1]$item[2]"
         }
@@ -646,20 +610,6 @@ q{
         $return = $item[2]
     }
 
-    government_street_name :
-        /US Highway \d{1,3} ([N|E|S|W] )?/i |
-        /State Road \d{1,3} ([N|E|S|W] )?/i |
-        /County Road \d{1,3} ([N|E|S|W] )?/i |
-        /Alt \d{1,3} ([N|E|S|W] )?/i  # Alternate road
-    {
-        $return = $item[1]
-    }
-
-    street_name_single_word: /([N|E|S|W] )?Broadway /i
-    {
-        $return = $item[1]
-    }
-
 
     # eg 42nd Street
     street_name_ordinal:
@@ -689,11 +639,13 @@ q{
          /Bnd\.? /i   | /Bend /i         |
          /Bl\.? /i    | /Bowl /i         |
          /Br\.? /i    | /Brae /i         |
+         /Brow /i      |
          /Cay /i      |
          /Cir\.? /i   | /Circle /i       | /Crcle /i   |
          /Cct\.? /i   | /Crt\.? /i       | /Cir\.? /i  | /Circuit /i |
          /Cl\.? /i    | /Close /i        |
          /Ct\.? /i    | /Court /i        |
+         /Cove /i     |
          /Cres\.? /i  | /Crs\.? /i       | /Cr\.? /i   | /Crescent /i |
          /Crest /i    |
          /Dr\.? /i    | /Drv\.? /i       | /Drive /i   |
@@ -705,6 +657,7 @@ q{
          /Gr\.? /i    | /Grove /i        |
          /Hwa?y\.? /i | /Highway /i      |
          /Island /i   | /Is /i           | /Isle? /i     |
+         /Key /i      |
          /Loop /i     |
          /Mall /i     |
          /Mews /i     |
@@ -725,23 +678,25 @@ q{
          /Rdy\.? /i   | /Roadway /i      |
          /Row /i      |
          /Sq\.? /i    | /Square /i       |
-         # /Stateroad \d{1,3} ([N|E|S|W] )?/i |
          /Tce\.? /i   | /Ter /i          | /Trce /i    | /Terrace /i |
          /Trl /i      | /Trail /i        |
+         /Tpke\.? /i  | /Turnpike /i     |
+         /Turn /i     |
          /Throughway /i  |
          /Wl?k\.? /i  | /Walk /i         |
          /Wy\.? /i    | /Way /i          | /Wynde /i
 
-     street_direction:
 
-         /N /  |
-         /NE / |
-         /NW / |
-         /E /  |
-         /S /  |
-         /SE / |
-         /SW / |
-         /W /
+    street_direction:
+
+        /N /  |
+        /NE / |
+        /NW / |
+        /E /  |
+        /S /  |
+        /SE / |
+        /SW / |
+        /W /
 
 };
 
@@ -889,7 +844,7 @@ sub _create
 
     # User can specify country either as full name or 2 letter
     # abbreviation, such as Australia or AU
-    my $country = new Locale::SubCountry($address->{country});
+    my $country = Locale::SubCountry->new($address->{country});
 
     $address->{country_code} = $country->country_code;
 

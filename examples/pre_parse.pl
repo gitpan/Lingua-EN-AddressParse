@@ -15,7 +15,7 @@ my %args =
 );
 
 
-my $address = new Lingua::EN::AddressParse(%args);
+my $address = Lingua::EN::AddressParse->new(%args);
 
 while (<DATA>)
 {
@@ -56,4 +56,3 @@ SHED 23/12 A STREET WODIN NSW 2600 AUSTRALIA
 23B/14C SOUTH HEAD ROAD WODIN NSW 2600 AUSTRALIA
 PO BOX 222 FINLEY NEW SOUTH WALES 2713
 U12 2 SMITH ST ULTIMO NSW 2007
-

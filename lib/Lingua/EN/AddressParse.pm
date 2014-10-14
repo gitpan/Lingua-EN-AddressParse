@@ -16,7 +16,7 @@ Lingua::EN::AddressParse - manipulate geographical addresses
       force_post_code => 0
     );
 
-    my $address = new Lingua::EN::AddressParse(%args);
+    my $address = Lingua::EN::AddressParse->new(%args);
     $error = $address->parse(
        "UNIT 2A 14-16 OLD SOUTH HEAD ST ST JOHNS WOOD NSW 2021 AUSTRALIA : HOLD MAIL");
 
@@ -131,7 +131,7 @@ optional argument to the C<new> method.
       force_post_code => 1
     );
 
-    my $address = new Lingua::EN::AddressParse(%args);
+    my $address = Lingua::EN::AddressParse->new(%args);
 
 =over 4
 
@@ -162,7 +162,7 @@ includes
 
     remove non alphanumeric characters.
     remove redundant white space
-    add missing space seperators
+    add missing space separators
     expand abbreviations to more common form
     remove bracketed annnotations
     fix badly formed sub property identifiers
@@ -374,12 +374,13 @@ it under the same terms as Perl itself.
 package Lingua::EN::AddressParse;
 
 use strict;
+use Carp;
 use warnings;
 use Lingua::EN::AddressParse::Grammar;
 use Lingua::EN::NameParse;
 use Parse::RecDescent;
 
-our $VERSION = '1.20';
+our $VERSION = '1.21';
 
 #------------------------------------------------------------------------------
 # Create a new instance of an address parsing object. This step is time
@@ -390,10 +391,13 @@ sub new
     my $class = shift;
     my %args = @_;
 
-    unless ( $args{country} )
+
+    unless (defined $args{country} and $args{country} =~
+            /^(AU|Australia|GB|United Kingdom|US|United States|CA|Canada)$/ )
     {
-        die "Cannot start parser. You must specify a value for the country in the options hash.\nValid options are AUS,GB,US or CA";
+        croak "Cannot start parser. You must specify a value for the country in the options hash.\nValid options are AUS,GB,US or CA.\n";
     }
+
 
     my $address = {};
     bless($address,$class);
@@ -410,7 +414,7 @@ sub new
     # create the grammar tree (this is country dependant)
     my $grammar = Lingua::EN::AddressParse::Grammar::_create($address);
 
-    $address->{parse} = new Parse::RecDescent($grammar);
+    $address->{parse} = Parse::RecDescent->new($grammar);
 
     return ($address);
 }
@@ -681,7 +685,7 @@ sub _assemble
     }
 
     # For correct matching, the grammar of each component must include the
-    # trailing space that seperates it from any following word. This should
+    # trailing space that separates it from any following word. This should
     # now be removed from each component
 
     $address->{components}{post_box} = '';
@@ -745,7 +749,7 @@ sub _assemble
         # Force sub country to abbreviated form, South Australia becomes SA, Michigan become MI etc
         if ($address->{abbreviate_subcountry})
         {
-            my $country = new Locale::SubCountry($address->{country});
+            my $country = Locale::SubCountry->new($address->{country});
             my $code = $country->code($sub_country);
             if ( $code ne 'unknown' )
             {
@@ -873,8 +877,13 @@ sub _clean
     $input =~ s| $||;
 
     # Expand abbreviations that are too short
-    $input =~ s|CSEWY|CAUSEWAY|;  # street nouns
-    $input =~ s|Csewy|Causeway|;
+
+     # street nouns
+    $input =~ s| CSEWY | CAUSEWAY |;
+    $input =~ s| Csewy | Causeway |;
+
+    # street types
+
 
     $input =~ s|^FCTR?Y |FACTORY |;
     $input =~ s|^Fctr?y |Factory |;
@@ -967,7 +976,7 @@ sub _extract_precursor
     }
 }
 #-------------------------------------------------------------------------------
-# Remove any desription that follow the suburb from the main address
+# Remove any description that follows the suburb after the main address
 # such as: PO BOX 1305 BIBRA LAKE PRIVATE BOXES WA 6965"
 # It will be saved as an address attribute
 

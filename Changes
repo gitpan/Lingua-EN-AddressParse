@@ -1,5 +1,13 @@
 Revision history for Perl CPAN module Lingua::EN::AddressParse
 
+1.21 14 Oct 2014
+    allowed for more untyped streets such as 'Avenue C', 'State Route 19'
+    more transformations added to the _clean function
+    added more street types
+    removed indirect object notation for 'new' method
+    validate 'country' parameter passed in as an argument to the new method
+
+
 1.20 22 Jul 2014
     added person's street name such as 'Dr Martin Luther King'
 

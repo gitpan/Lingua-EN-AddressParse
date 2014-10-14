@@ -4,7 +4,7 @@
       "Kim Ryan <kimryan at cpan org>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Module::Build version 0.421",
    "license" : [
       "perl_5"
    ],
@@ -27,6 +27,7 @@
       },
       "runtime" : {
          "requires" : {
+            "Carp" : "1.08",
             "Lingua::EN::NameParse" : "1.24",
             "Locale::SubCountry" : "1.41",
             "Parse::RecDescent" : "1",
@@ -41,11 +42,11 @@
    "provides" : {
       "Lingua::EN::AddressParse" : {
          "file" : "lib/Lingua/EN/AddressParse.pm",
-         "version" : "1.20"
+         "version" : "1.21"
       },
       "Lingua::EN::AddressParse::Grammar" : {
          "file" : "lib/Lingua/EN/AddressParse/Grammar.pm",
-         "version" : "1.20"
+         "version" : "1.21"
       }
    },
    "release_status" : "stable",
@@ -54,5 +55,5 @@
          "http://dev.perl.org/licenses/"
       ]
    },
-   "version" : "1.20"
+   "version" : "1.21"
 }

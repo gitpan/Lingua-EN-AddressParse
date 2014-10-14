@@ -14,7 +14,7 @@ my %args =
 );
 
 
-my $address = new Lingua::EN::AddressParse(%args);
+my $address = Lingua::EN::AddressParse->new(%args);
 open(REPORT_FH,">report.txt") or die;
 
 open(ERROR_FH,">error.txt") or die;
